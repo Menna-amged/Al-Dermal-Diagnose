@@ -12,6 +12,7 @@ import SubmitButton from "../components/forms/SubmitButton";
 import CustomForm from "../components/forms/Form";
 import AuthLayout from "../components/layout/AuthLayout";
 import AuthHeader from "../components/auth/AuthHeader";
+import { verifyOtp } from "../services/auth.service";
 
 function OTPInputs() {
   const { setFieldValue } = useFormikContext<any>();
@@ -84,10 +85,16 @@ export default function VerificationScreen({ navigation, setIsLoggedIn  , route}
 
       <CustomForm
         initialValues={{ code: "" }}
-        onSubmit={(values) => {
-          console.log(values);
-        navigation.navigate("UserDetails", { email });
-        
+        onSubmit={async (values, { setFieldError, setSubmitting }) => {
+          try {
+            await verifyOtp(email, values.code);
+            navigation.navigate("PatientLogin");
+          } catch (error: any) {
+            const message = error?.response?.data?.error || "Invalid or expired code";
+            setFieldError("code", message);
+          } finally {
+            setSubmitting(false);
+          }
         }}
       >
         <>

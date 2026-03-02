@@ -30,7 +30,8 @@ const validationSchema = Yup.object().shape({
   location: Yup.string().max(50, "Too long").optional(),
 });
 
-function UserDetailsScreen({ navigation }: any) {
+function UserDetailsScreen({ navigation, route }: any) {
+  const email = route.params?.email;
   return (
     <AuthLayout>
       <AuthHeader title="Your Details" step={2} navigation={navigation} />
@@ -45,8 +46,7 @@ function UserDetailsScreen({ navigation }: any) {
         }}
         validationSchema={validationSchema}
         onSubmit={(values) => {
-          console.log(values);
-          navigation.navigate("CreatePassword");
+          navigation.navigate("CreatePassword", { email, ...values });
         }}
       >
         <>

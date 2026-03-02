@@ -17,7 +17,7 @@ const validationSchema = Yup.object().shape({
     .lowercase()
     .matches(
       /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|hotmail|outlook)\.com$/,
-      "Email must be valid (gmail, yahoo...)"
+      "Email must be valid "
     ),
 });
 export default function CreateAccountScreen({ navigation }: any) {
@@ -43,7 +43,7 @@ export default function CreateAccountScreen({ navigation }: any) {
   <CustomForm
   initialValues={{ email: "" }}
   validationSchema={validationSchema}
-  onSubmit={(values) => navigation.navigate("Verification", { email: values.email })}
+  onSubmit={(values) => navigation.navigate("UserDetails", { email: values.email })}
 >
    
 

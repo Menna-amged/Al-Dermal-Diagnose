@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+//tells prisma we are using postgres
+datasource db {
+  provider = "postgresql"
+}
+
+//DB table
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  firstName   String?
+  lastName    String?
+  gender      String?
+  age         Int?
+  location    String?
+  role             Role     @default(PATIENT)
+  isVerified       Boolean  @default(false)
+  verificationCode String?
+  createdAt        DateTime @default(now())
+}
+
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}

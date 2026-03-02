@@ -4,10 +4,10 @@ import AuthLayout from '../components/layout/AuthLayout';
 import AuthHeader from '../components/auth/AuthHeader';
 import CustomFormField from '../components/forms/FormField';
 import SubmitButton from '../components/forms/SubmitButton';
-import { Formik } from "formik";
 import * as Yup from "yup";
 import CustomForm from '../components/forms/Form';
 import PasswordStrength from '../components/forms/PasswordStrength';
+import { register } from '../services/auth.service';
 const validationSchema = Yup.object().shape({
   password: Yup.string()
     .required("Password is required")
@@ -22,7 +22,8 @@ const validationSchema = Yup.object().shape({
     .oneOf([Yup.ref("password")], "Passwords do not match"),
 });
 
-function CreatePasswordScreen({ navigation , setIsLoggedIn }: any) {
+function CreatePasswordScreen({ navigation, route }: any) {
+  const { email, firstName, lastName, gender, age, location } = route.params || {};
 
   return (
     <AuthLayout>
@@ -34,10 +35,17 @@ function CreatePasswordScreen({ navigation , setIsLoggedIn }: any) {
           confirmPassword: "",
         }}
         validationSchema={validationSchema}
-      onSubmit={(values) => {
-  console.log(values);
-  setIsLoggedIn(true); 
-}}
+      onSubmit={async (values, { setFieldError, setSubmitting }) => {
+        try {
+          await register({ email, password: values.password, confirmPassword: values.confirmPassword, firstName, lastName, gender, age: Number(age), location });
+          navigation.navigate("Verification", { email });
+        } catch (error: any) {
+          const message = error?.response?.data?.error || "Registration failed";
+          setFieldError("confirmPassword", message);
+        } finally {
+          setSubmitting(false);
+        }
+      }}
       >
       
           <>

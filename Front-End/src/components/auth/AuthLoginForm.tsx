@@ -1,4 +1,5 @@
 import React from "react";
+import { login } from '../../services/auth.service';
 import * as Yup from "yup";
 import {
   View,
@@ -53,9 +54,17 @@ export default function AuthLoginForm({
         <CustomForm
           initialValues={{ email: "", password: "" }}
           validationSchema={validationSchema}
-          onSubmit={(values) => {
-            console.log(values);
-           setIsLoggedIn(true); 
+          onSubmit={async (values, { setFieldError, setSubmitting }) => {
+            try {
+              await login(values.email, values.password);
+              setIsLoggedIn(true);
+            } catch (error: any) {
+              const message =
+                error?.response?.data?.message || "Invalid email or password";
+              setFieldError("password", message);
+            } finally {
+              setSubmitting(false);
+            }
           }}
         >
           <>
