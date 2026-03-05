@@ -32,6 +32,7 @@ const validationSchema = Yup.object().shape({
 
 function UserDetailsScreen({ navigation, route }: any) {
   const email = route.params?.email;
+  const returnTo = route.params?.returnTo || "PatientLogin";
   return (
     <AuthLayout>
       <AuthHeader title="Your Details" step={2} navigation={navigation} />
@@ -46,7 +47,7 @@ function UserDetailsScreen({ navigation, route }: any) {
         }}
         validationSchema={validationSchema}
         onSubmit={(values) => {
-          navigation.navigate("CreatePassword", { email, ...values });
+          navigation.navigate("CreatePassword", { email, returnTo, ...values });
         }}
       >
         <>

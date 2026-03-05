@@ -7,6 +7,7 @@ import SubmitButton from "../components/forms/SubmitButton";
 import colors from "../config/colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as Yup from "yup";
+import { checkEmail } from "../services/auth.service";
 
 
 const validationSchema = Yup.object().shape({
@@ -20,7 +21,8 @@ const validationSchema = Yup.object().shape({
       "Email must be valid "
     ),
 });
-export default function CreateAccountScreen({ navigation }: any) {
+export default function CreateAccountScreen({ navigation, route }: any) {
+  const returnTo = route.params?.returnTo || "PatientLogin";
   return (
     <AuthLayout>
       
@@ -43,7 +45,14 @@ export default function CreateAccountScreen({ navigation }: any) {
   <CustomForm
   initialValues={{ email: "" }}
   validationSchema={validationSchema}
-  onSubmit={(values) => navigation.navigate("UserDetails", { email: values.email })}
+  onSubmit={async (values, { setFieldError }) => {
+    try {
+      await checkEmail(values.email);
+      navigation.navigate("UserDetails", { email: values.email, returnTo });
+    } catch (err: any) {
+      setFieldError("email", err.response?.data?.error || "This email is already registered");
+    }
+  }}
 >
    
 
@@ -68,7 +77,7 @@ export default function CreateAccountScreen({ navigation }: any) {
 
       <View style={styles.loginRow}>
         <Text style={styles.loginText}>Already have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate("PatientLogin")}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.loginLink}>Login</Text>
         </TouchableOpacity>
       </View>

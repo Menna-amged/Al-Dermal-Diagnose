@@ -113,7 +113,7 @@ function CustomFormField({
         </>
       ) : (
         /* Normal TextInput */
-      <View>
+      <View style={{ marginBottom: 30 }}>
 <View>
 <View
   style={[
@@ -187,7 +187,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightGray,
     borderRadius: 10,
     paddingHorizontal: 12,
-    marginBottom: 30,
     color: colors.darkGray,
   },
 
@@ -246,6 +245,7 @@ optionText: {
 errorText: {
   color: colors.red,
   fontSize: 13,
+  marginTop: 6,
   marginBottom: 10,
   marginLeft: 5,
 },

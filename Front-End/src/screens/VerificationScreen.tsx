@@ -12,7 +12,7 @@ import SubmitButton from "../components/forms/SubmitButton";
 import CustomForm from "../components/forms/Form";
 import AuthLayout from "../components/layout/AuthLayout";
 import AuthHeader from "../components/auth/AuthHeader";
-import { verifyOtp } from "../services/auth.service";
+import { verifyOtp, resendOtp } from "../services/auth.service";
 
 function OTPInputs() {
   const { setFieldValue } = useFormikContext<any>();
@@ -62,7 +62,9 @@ function OTPInputs() {
 
 export default function VerificationScreen({ navigation, setIsLoggedIn  , route}: any) {
   const email = route.params?.email || "user@example.com";
-  const [timer, setTimer] = useState(120);
+  const returnTo = route.params?.returnTo || "PatientLogin";
+  const [timer, setTimer] = useState(60);
+  const [otpKey, setOtpKey] = useState(0);
 
   useEffect(() => {
     if (timer === 0) return;
@@ -85,25 +87,34 @@ export default function VerificationScreen({ navigation, setIsLoggedIn  , route}
 
       <CustomForm
         initialValues={{ code: "" }}
-        onSubmit={async (values, { setFieldError, setSubmitting }) => {
+        onSubmit={async (values, { setFieldError, setSubmitting, setFieldValue }) => {
           try {
             await verifyOtp(email, values.code);
-            navigation.navigate("PatientLogin");
+            navigation.replace(returnTo);
           } catch (error: any) {
             const message = error?.response?.data?.error || "Invalid or expired code";
             setFieldError("code", message);
+            setOtpKey((k) => k + 1);
+            setFieldValue("code", "");
           } finally {
             setSubmitting(false);
           }
         }}
       >
         <>
-          <OTPInputs />
+          <OTPInputs key={otpKey} />
 
            <View style={styles.resendRow}>
             <Text style={styles.grayText}>Didn't get a code? </Text>
             <TouchableOpacity
-              onPress={() => timer === 0 && setTimer(120)}
+              onPress={async () => {
+                if (timer === 0) {
+                  try {
+                    await resendOtp(email);
+                    setTimer(60);
+                  } catch {}
+                }
+              }}
               disabled={timer !== 0}
             >
               <Text style={[styles.resendText, timer === 0 ? styles.resendActive : styles.resendDisabled]}>

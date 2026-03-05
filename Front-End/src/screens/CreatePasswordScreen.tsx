@@ -23,7 +23,7 @@ const validationSchema = Yup.object().shape({
 });
 
 function CreatePasswordScreen({ navigation, route }: any) {
-  const { email, firstName, lastName, gender, age, location } = route.params || {};
+  const { email, firstName, lastName, gender, age, location, returnTo = "PatientLogin" } = route.params || {};
 
   return (
     <AuthLayout>
@@ -38,7 +38,7 @@ function CreatePasswordScreen({ navigation, route }: any) {
       onSubmit={async (values, { setFieldError, setSubmitting }) => {
         try {
           await register({ email, password: values.password, confirmPassword: values.confirmPassword, firstName, lastName, gender, age: Number(age), location });
-          navigation.navigate("Verification", { email });
+          navigation.navigate("Verification", { email, returnTo });
         } catch (error: any) {
           const message = error?.response?.data?.error || "Registration failed";
           setFieldError("confirmPassword", message);

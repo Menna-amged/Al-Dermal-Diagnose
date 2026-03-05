@@ -13,6 +13,7 @@ import CustomForm from "../components/forms/Form";
 import AuthLayout from "../components/layout/AuthLayout";
 import AuthHeader from "../components/auth/AuthHeader";
 import { Ionicons } from "@expo/vector-icons";
+import { forgotPassword, verifyResetOtp } from "../services/auth.service";
 
 function OTPInputs() {
   const { setFieldValue } = useFormikContext<any>();
@@ -60,9 +61,12 @@ function OTPInputs() {
   );
 }
 
-export default function OTPCheckScreen({ navigation, setIsLoggedIn  , route}: any) {
+export default function OTPCheckScreen({ navigation, setIsLoggedIn, route }: any) {
   const email = route.params?.email || "user@example.com";
-  const [timer, setTimer] = useState(120);
+  const returnTo = route.params?.returnTo || "PatientLogin";
+  const [timer, setTimer] = useState(60);
+  const [error, setError] = useState("");
+  const [otpKey, setOtpKey] = useState(0);
 
   useEffect(() => {
     if (timer === 0) return;
@@ -89,19 +93,37 @@ export default function OTPCheckScreen({ navigation, setIsLoggedIn  , route}: an
 
       <CustomForm
         initialValues={{ code: "" }}
-        onSubmit={(values) => {
-          console.log(values);
-        navigation.navigate("ChangePassword", { email });
-        
+        onSubmit={async (values, { setFieldValue }) => {
+          setError("");
+          if (values.code.length < 6) {
+            setError("Please enter the full 6-digit code");
+            return;
+          }
+          try {
+            await verifyResetOtp(email, values.code);
+            navigation.replace("ChangePassword", { email, returnTo });
+          } catch (err: any) {
+            setError(err.response?.data?.error || "Invalid or expired code");
+            setOtpKey((k) => k + 1);
+            setFieldValue("code", "");
+          }
         }}
       >
         <>
-          <OTPInputs />
+          <OTPInputs key={otpKey} />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
            <View style={styles.resendRow}>
             <Text style={styles.grayText}>Didn't get a code? </Text>
             <TouchableOpacity
-              onPress={() => timer === 0 && setTimer(120)}
+              onPress={async () => {
+                if (timer === 0) {
+                  try {
+                    await forgotPassword(email);
+                    setTimer(60);
+                  } catch {}
+                }
+              }}
               disabled={timer !== 0}
             >
               <Text style={[styles.resendText, timer === 0 ? styles.resendActive : styles.resendDisabled]}>
@@ -168,5 +190,6 @@ const styles = StyleSheet.create({
   },
   link: { color: colors.main, fontWeight: "600" },
   timer: { color: colors.gray, marginLeft: 5 },
-  footer: { alignItems: "center", paddingBottom: 20 , marginTop: 40},
+  footer: { alignItems: "center", paddingBottom: 20, marginTop: 40 },
+  errorText: { color: "red", textAlign: "center", marginBottom: 10 },
 });

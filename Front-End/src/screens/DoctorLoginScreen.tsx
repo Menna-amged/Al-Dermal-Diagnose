@@ -6,6 +6,7 @@ export default function DoctorLoginScreen({ navigation, setIsLoggedIn }: any) {
     <AuthLoginForm
       navigation={navigation}
       showRegister={false}
+      returnTo="DoctorLogin"
       setIsLoggedIn={setIsLoggedIn}
     />
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AuthLayout from "../components/layout/AuthLayout";
@@ -9,6 +9,7 @@ import colors from "../config/colors";
 import { useFormikContext } from "formik";
 import * as Yup from "yup";
 import PasswordStrength from "../components/forms/PasswordStrength";
+import { resetPassword } from "../services/auth.service";
 
 const validationSchema = Yup.object().shape({
   password: Yup.string()
@@ -24,7 +25,10 @@ const validationSchema = Yup.object().shape({
     .oneOf([Yup.ref("password")], "Passwords do not match"),
 });
 
-export default function ChangePasswordScreen({ navigation }: any) {
+export default function ChangePasswordScreen({ navigation, route }: any) {
+  const { email, returnTo = "PatientLogin" } = route.params;
+  const [error, setError] = useState("");
+
   return (
     <AuthLayout>
       <View style={styles.header}>
@@ -38,7 +42,15 @@ export default function ChangePasswordScreen({ navigation }: any) {
       <CustomForm
   initialValues={{ password: "", confirmPassword: "" }}
   validationSchema={validationSchema}
-  onSubmit={() => navigation.navigate("PatientLogin")}
+  onSubmit={async (values) => {
+    try {
+      setError("");
+      await resetPassword(email, values.password, values.confirmPassword);
+      navigation.replace(returnTo);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Something went wrong");
+    }
+  }}
 >
         <>
           <View style={styles.content}>
@@ -46,6 +58,7 @@ export default function ChangePasswordScreen({ navigation }: any) {
               Your password must be at least 6 characters and should include
               letters, numbers and special characters.
             </Text>
+            {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <CustomFormField
               name="password"
@@ -83,6 +96,10 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.gray,
     marginBottom: 30,
+  },
+  error: {
+    color: "red",
+    marginBottom: 10,
   },
   content: {
     flex: 1,

@@ -29,12 +29,14 @@ const validationSchema = Yup.object().shape({
 interface Props {
   navigation: any;
   showRegister?: boolean;
+  returnTo?: string;
   setIsLoggedIn: (loggedIn: boolean) => void;
 }
 
 export default function AuthLoginForm({
   navigation,
   showRegister = false,
+  returnTo = "PatientLogin",
   setIsLoggedIn,
 }: Props) {
   return (
@@ -85,7 +87,7 @@ export default function AuthLoginForm({
             />
 
             <TouchableOpacity
-              onPress={() => navigation.navigate("ForgotPassword")}
+              onPress={() => navigation.navigate("ForgotPassword", { returnTo })}
             >
               <Text style={styles.forgotPassword}>
                 Forgot Password?
@@ -104,7 +106,7 @@ export default function AuthLoginForm({
 
                 <TouchableOpacity
                   onPress={() =>
-                    navigation.navigate("CreateAccount")
+                    navigation.navigate("CreateAccount", { returnTo })
                   }
                 >
                   <Text style={styles.registerLink}>

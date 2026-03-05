@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AuthLayout from "../components/layout/AuthLayout";
@@ -7,6 +7,7 @@ import CustomFormField from "../components/forms/FormField";
 import SubmitButton from "../components/forms/SubmitButton";
 import colors from "../config/colors";
 import * as Yup from "yup";
+import { forgotPassword } from "../services/auth.service";
 
 const forgotPasswordValidationSchema = Yup.object().shape({
   email: Yup.string()
@@ -16,7 +17,10 @@ const forgotPasswordValidationSchema = Yup.object().shape({
     .email("Enter a valid email address")
     .max(254, "Email is too long"),
 });
-export default function ForgotPasswordScreen({ navigation }: any) {
+export default function ForgotPasswordScreen({ navigation, route }: any) {
+  const returnTo = route.params?.returnTo || "PatientLogin";
+  const [error, setError] = useState("");
+
   return (
     <AuthLayout>
       {/* Header */}
@@ -31,8 +35,14 @@ export default function ForgotPasswordScreen({ navigation }: any) {
     <CustomForm
   initialValues={{ email: "" }}
   validationSchema={forgotPasswordValidationSchema}
-  onSubmit={(values) => {
-    navigation.navigate("OTPCheck", { email: values.email });
+  onSubmit={async (values) => {
+    try {
+      setError("");
+      await forgotPassword(values.email);
+      navigation.navigate("OTPCheck", { email: values.email, returnTo });
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Something went wrong");
+    }
   }}
 >
         <>
@@ -40,6 +50,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
             <Text style={styles.subtitle}>
               Enter your email then we will send you a code to reset your password
             </Text>
+            {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <CustomFormField
           name="email"
@@ -73,6 +84,10 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.gray,
     marginBottom: 30,
+  },
+  error: {
+    color: "red",
+    marginBottom: 10,
   },
   content: {
     flex: 1,
