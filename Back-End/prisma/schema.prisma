@@ -17,7 +17,6 @@ model User {
   gender      String?
   age         Int?
   location    String?
-<<<<<<< HEAD
   role              Role              @default(PATIENT)
   isVerified        Boolean           @default(false)
   verificationCode  String?
@@ -25,13 +24,6 @@ model User {
   isPremium         Boolean           @default(false)
   passwordResetCode String?
   passwordHistory   PasswordHistory[]
-=======
-  role             Role     @default(PATIENT)
-  isVerified       Boolean  @default(false)
-  verificationCode String?
-  createdAt        DateTime @default(now())
-  isPremium        Boolean  @default(false)
->>>>>>> f97869e767aeaa1bc28c895ea381bd8793a0fa03
 }
 
 model PasswordHistory {
