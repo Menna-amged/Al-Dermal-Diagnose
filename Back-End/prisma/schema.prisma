@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String            @id @default(uuid())
+  email             String            @unique
+  password          String
+  firstName         String?
+  lastName          String?
+  gender            String?
+  age               Int?
+  location          String?
+  phone             String?
+  bloodType         String?
+  lastVisit         DateTime?
+  isBanned          Boolean           @default(false)
+  assignedDoctorId  String?
+  assignedDoctor    User?             @relation("PatientDoctor", fields: [assignedDoctorId], references: [id])
+  patients          User[]            @relation("PatientDoctor")
+  role              Role              @default(PATIENT)
+  isVerified        Boolean           @default(false)
+  verificationCode  String?
+  createdAt         DateTime          @default(now())
+  isPremium         Boolean           @default(false)
+  passwordResetCode String?
+  passwordHistory   PasswordHistory[]
+  patientCases      Case[]            @relation("PatientCases")
+  doctorCases       Case[]            @relation("DoctorCases")
+  doctorReports     Report[]          @relation("DoctorReports")
+}
+
+model PasswordHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  password  String
+  changedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Case {
+  id          String     @id @default(uuid())
+  caseNumber  Int        @default(autoincrement())
+  patientName String
+  doctorName  String
+  patientId   String?
+  patient     User?      @relation("PatientCases", fields: [patientId], references: [id])
+  doctorId    String?
+  doctor      User?      @relation("DoctorCases", fields: [doctorId], references: [id])
+  condition   String
+  risk        RiskLevel
+  status      CaseStatus @default(PENDING)
+  confidence  Float
+  date        DateTime   @default(now())
+  notes       String?
+}
+
+model Report {
+  id           String       @id @default(uuid())
+  reportNumber Int          @default(autoincrement())
+  title        String
+  type         ReportType
+  doctorName   String
+  doctorId     String?
+  doctor       User?        @relation("DoctorReports", fields: [doctorId], references: [id])
+  status       ReportStatus @default(DRAFT)
+  date         DateTime     @default(now())
+  casesCount   Int
+  findings     String?
+}
+
+model Admin {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  name      String
+  role      AdminRole @default(ADMINISTRATOR)
+  avatar    String?
+  createdAt DateTime  @default(now())
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum AdminRole {
+  ADMINISTRATOR
+  DERMATOLOGIST
+  SKIN_ANALYST
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CaseStatus {
+  PENDING
+  DIAGNOSED
+  CLOSED
+}
+
+enum ReportType {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  SPECIAL
+}
+
+enum ReportStatus {
+  DRAFT
+  PUBLISHED
+}
