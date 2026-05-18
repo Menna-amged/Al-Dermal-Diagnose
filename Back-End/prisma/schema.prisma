@@ -2,28 +2,55 @@ generator client {
   provider = "prisma-client-js"
 }
 
-//tells prisma we are using postgres
 datasource db {
   provider = "postgresql"
 }
 
-//DB table
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  password    String
-  firstName   String?
-  lastName    String?
-  gender      String?
-  age         Int?
-  location    String?
+  id                String            @id @default(uuid())
+  email             String            @unique
+  password          String
+  firstName         String?
+  lastName          String?
+  gender            String?
+  age               Int?
+  location          String?
+  phone             String?
   role              Role              @default(PATIENT)
+  isBanned          Boolean           @default(false)
   isVerified        Boolean           @default(false)
   verificationCode  String?
   createdAt         DateTime          @default(now())
-  isPremium         Boolean           @default(false)
   passwordResetCode String?
   passwordHistory   PasswordHistory[]
+  doctor            Doctor?
+  patient           Patient?
+}
+
+model Doctor {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+  specialty         String?
+  bio               String?
+  clinicName        String?
+  rating            Float     @default(0)
+  isProfileComplete Boolean   @default(false)
+  patients          Patient[] @relation("PatientDoctor")
+  cases             Case[]    @relation("DoctorCases")
+  reports           Report[]  @relation("DoctorReports")
+}
+
+model Patient {
+  id               String    @id @default(uuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id])
+  bloodType        String?
+  lastVisit        DateTime?
+  isPremium        Boolean   @default(false)
+  assignedDoctorId String?
+  assignedDoctor   Doctor?   @relation("PatientDoctor", fields: [assignedDoctorId], references: [id])
+  cases            Case[]    @relation("PatientCases")
 }
 
 model PasswordHistory {
@@ -34,8 +61,79 @@ model PasswordHistory {
   user      User     @relation(fields: [userId], references: [id])
 }
 
+model Case {
+  id          String     @id @default(uuid())
+  caseNumber  Int        @default(autoincrement())
+  patientName String
+  doctorName  String
+  patientId   String?
+  patient     Patient?   @relation("PatientCases", fields: [patientId], references: [id])
+  doctorId    String?
+  doctor      Doctor?    @relation("DoctorCases", fields: [doctorId], references: [id])
+  condition   String
+  risk        RiskLevel
+  status      CaseStatus @default(PENDING)
+  confidence  Float
+  date        DateTime   @default(now())
+  notes       String?
+}
+
+model Report {
+  id           String       @id @default(uuid())
+  reportNumber Int          @default(autoincrement())
+  title        String
+  type         ReportType
+  doctorName   String
+  doctorId     String?
+  doctor       Doctor?      @relation("DoctorReports", fields: [doctorId], references: [id])
+  status       ReportStatus @default(DRAFT)
+  date         DateTime     @default(now())
+  casesCount   Int
+  findings     String?
+}
+
+model Admin {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  name      String
+  role      AdminRole @default(ADMINISTRATOR)
+  avatar    String?
+  createdAt DateTime  @default(now())
+}
+
 enum Role {
   PATIENT
   DOCTOR
   ADMIN
+}
+
+enum AdminRole {
+  ADMINISTRATOR
+  DERMATOLOGIST
+  SKIN_ANALYST
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CaseStatus {
+  PENDING
+  DIAGNOSED
+  CLOSED
+}
+
+enum ReportType {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  SPECIAL
+}
+
+enum ReportStatus {
+  DRAFT
+  PUBLISHED
 }

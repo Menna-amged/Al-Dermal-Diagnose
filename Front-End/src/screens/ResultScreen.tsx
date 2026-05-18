@@ -1,11 +1,14 @@
+
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, StatusBar } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ResultScreen({ navigation, route }: any) {
+  const insets = useSafeAreaInsets();
   const { imageUri } = route.params;
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -35,7 +38,7 @@ export default function ResultScreen({ navigation, route }: any) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#fff", paddingTop: StatusBar.currentHeight ?? 0 },
+  screen: { flex: 1, backgroundColor: "#fff" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 12 },
   headerTitle: { fontSize: 18, fontWeight: "700", color: "#111" },
   content: { padding: 24, alignItems: "center", gap: 20 },

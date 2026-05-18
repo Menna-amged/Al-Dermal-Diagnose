@@ -1,9 +1,13 @@
 import { Router } from "express";
-import { upgradeMe, downgradeMe, upgradeUser, downgradeUser } from "./users.controller";
+import { getDoctors, getDoctorRecentCases, getMe, upgradeMe, downgradeMe, upgradeUser, downgradeUser } from "./users.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { requireRole } from "../../middlewares/role.middleware";
 
 const router = Router();
+
+router.get("/doctors", authMiddleware, getDoctors);
+router.get("/doctors/:userId/cases", authMiddleware, getDoctorRecentCases);
+router.get("/me", authMiddleware, getMe);
 
 // Any authenticated user can manage their own subscription
 router.patch("/me/upgrade", authMiddleware, upgradeMe);

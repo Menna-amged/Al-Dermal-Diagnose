@@ -1,20 +1,27 @@
 // pages/Reports/ReportsPage.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCrud } from '../../hooks/useCrud';
-import { ReportService } from '../../services';
+import { ReportService, DoctorService } from '../../services';
 import { useToast } from '../../context/ToastContext';
 import { Btn, Badge, Modal, ConfirmModal, FormField, Input, Select, Textarea, SearchBar, PageHeader, StatCard } from '../../components/common';
-import { REPORT_TYPES, DOCTORS_LIST } from '../../types';
+import { REPORT_TYPES } from '../../types';
 import { THead, EmptyRow, Loader } from '../Doctors/DoctorsPage';
 
-const BLANK = { title:'', type:'Monthly', doctor:'Dr. Sara Ahmed', status:'draft', cases:'', findings:'' };
+const BLANK = { title:'', type:'Monthly', doctor:'', status:'draft', cases:'', findings:'' };
 
 export default function ReportsPage() {
   const toast = useToast();
   const { items: reports, setItems, loading, create, update, remove } = useCrud(ReportService);
-  const [search, setSearch] = useState('');
-  const [modal,  setModal]  = useState(null);
-  const [form,   setForm]   = useState(BLANK);
+  const [doctors, setDoctors] = useState([]);
+  const [search,  setSearch]  = useState('');
+  const [modal,   setModal]   = useState(null);
+  const [form,    setForm]    = useState(BLANK);
+
+  useEffect(() => {
+    DoctorService.getAll()
+      .then(list => setDoctors(list.filter(d => d.status !== 'banned')))
+      .catch(() => {});
+  }, []);
 
   const filtered = reports.filter(r =>
     r.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,7 +69,7 @@ export default function ReportsPage() {
                 <tr key={r.id} style={{ borderBottom: i < filtered.length-1 ? '1px solid #f8fafc' : 'none', transition:'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background='#f8faff'}
                   onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                  <td style={{ padding:'13px 14px', fontSize:12, fontWeight:700, color:'#2563eb' }}>{r.id}</td>
+                  <td style={{ padding:'13px 14px', fontSize:12, fontWeight:700, color:'#2563eb' }}>{r.displayId || r.id}</td>
                   <td style={{ padding:'13px 14px' }}>
                     <div style={{ fontSize:13, fontWeight:600, color:'#0f172a', maxWidth:220 }}>{r.title}</div>
                     {r.findings && <div style={{ fontSize:11, color:'#94a3b8', marginTop:2 }}>{r.findings}</div>}
@@ -92,7 +99,12 @@ export default function ReportsPage() {
           <FormField label="Report Title *"><Input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="Report title"/></FormField>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <FormField label="Type"><Select value={form.type} onChange={e=>setForm({...form,type:e.target.value})}>{REPORT_TYPES.map(t=><option key={t}>{t}</option>)}</Select></FormField>
-            <FormField label="Author"><Select value={form.doctor} onChange={e=>setForm({...form,doctor:e.target.value})}>{[...DOCTORS_LIST,'Admin'].map(d=><option key={d}>{d}</option>)}</Select></FormField>
+            <FormField label="Author">
+              <Select value={form.doctor} onChange={e=>setForm({...form,doctor:e.target.value})}>
+                <option value="">— Select doctor —</option>
+                {doctors.map(d=><option key={d.id} value={d.name}>{d.name}</option>)}
+              </Select>
+            </FormField>
             <FormField label="Cases Count"><Input type="number" value={form.cases} onChange={e=>setForm({...form,cases:e.target.value})} placeholder="0"/></FormField>
             <FormField label="Status"><Select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option value="draft">Draft</option><option value="published">Published</option></Select></FormField>
           </div>

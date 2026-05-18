@@ -1,89 +1,61 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "../../config/colors";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 type Tab = {
   name: string;
-  icon: React.ComponentProps<typeof Ionicons>["name"];
+  icon: keyof typeof Ionicons.glyphMap;
+  activeIcon: keyof typeof Ionicons.glyphMap;
+  screen: string;
 };
 
 const TABS: Tab[] = [
-  { name: "Home", icon: "home-outline" },
-  { name: "Schedule", icon: "calendar-outline" },
-  { name: "Alerts", icon: "notifications-outline" },
-  { name: "Settings", icon: "settings-outline" },
+  { name: "Home",     icon: "home-outline",          activeIcon: "home",          screen: "Home" },
+  { name: "Schedule", icon: "calendar-outline",      activeIcon: "calendar",      screen: "Schedule" },
+  { name: "Alerts",   icon: "notifications-outline", activeIcon: "notifications", screen: "Alerts" },
+  { name: "Settings", icon: "settings-outline",      activeIcon: "settings",      screen: "Settings" },
 ];
 
-export default function BottomTabBar() {
-  const [active, setActive] = useState("Home");
+type Props = {
+  activeTab?: string;
+};
+
+export default function BottomTabBar({ activeTab }: Props) {
+  const navigation = useNavigation<any>();
+  const route = useRoute();
+  const currentTab = activeTab ?? route.name;
 
   return (
     <View style={styles.container}>
-      {TABS.map((tab, index) => (
-        <React.Fragment key={tab.name}>
-          {index === 2 && (
-            <TouchableOpacity style={styles.fab} activeOpacity={0.85}>
-              <Ionicons name="add" size={28} color={colors.white} />
-            </TouchableOpacity>
-          )}
+      {TABS.map((tab) => {
+        const isActive = currentTab === tab.name;
+        return (
           <TouchableOpacity
+            key={tab.name}
             style={styles.tab}
-            onPress={() => setActive(tab.name)}
+            onPress={() => navigation.navigate(tab.screen)}
             activeOpacity={0.7}
           >
             <Ionicons
-              name={tab.icon}
-              size={22}
-              color={active === tab.name ? colors.main : colors.darkGray}
+              name={isActive ? tab.activeIcon : tab.icon}
+              size={24}
+              color={isActive ? colors.main : colors.darkGray}
             />
-            <Text
-              style={[
-                styles.label,
-                active === tab.name && { color: colors.main },
-              ]}
-            >
+            <Text style={[styles.label, isActive && styles.labelActive]}>
               {tab.name}
             </Text>
           </TouchableOpacity>
-        </React.Fragment>
-      ))}
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.lightGray,
-    paddingBottom: 8,
-    paddingTop: 6,
-    paddingHorizontal: 10,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  label: {
-    fontSize: 10,
-    marginTop: 2,
-    color: colors.darkGray,
-  },
-  fab: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.main,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-    shadowColor: colors.main,
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-  },
+  container: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.lightGray, paddingBottom: 20, paddingTop: 10, paddingHorizontal: 10 },
+  tab: { flex: 1, alignItems: "center", gap: 3 },
+  label: { fontSize: 11, color: colors.darkGray },
+  labelActive: { color: colors.main, fontWeight: "600" },
 });

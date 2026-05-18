@@ -1,23 +1,38 @@
 // pages/Dashboard/DashboardPage.jsx
+import { useState, useEffect } from 'react';
 import { StatCard, Badge } from '../../components/common';
 import { BarChart, DonutChart } from '../../components/common/Charts';
-import { MOCK_CASES, CHART_MONTHLY, CHART_DONUT } from '../../data/MockData';
+import { CaseService, StatisticsService } from '../../services';
 
 export default function DashboardPage() {
+  const [cases,  setCases]  = useState([]);
+  const [charts, setCharts] = useState(null);
+
+  useEffect(() => {
+    CaseService.getAll().then(setCases).catch(console.error);
+    StatisticsService.get().then(setCharts).catch(console.error);
+  }, []);
+
+  const highRisk  = cases.filter(c => c.risk   === 'high').length;
+  const pending   = cases.filter(c => c.status === 'pending').length;
+  const diagnosed = cases.filter(c => c.status === 'diagnosed').length;
+
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:22, animation:'fadeUp 0.4s ease both' }}>
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:16 }}>
-        <StatCard icon="🔬" label="Total Cases"      value={1284} delta="+12%" color="#2563eb" bg="#eff6ff"/>
-        <StatCard icon="✅" label="Diagnosed Today"  value={24}   delta="+3"   color="#0891b2" bg="#ecfeff"/>
-        <StatCard icon="⏳" label="Pending Review"   value={7}    delta="-2"   color="#f59e0b" bg="#fffbeb"/>
-        <StatCard icon="⚠️" label="High Risk Cases"  value={18}   delta="+5%"  color="#dc2626" bg="#fef2f2"/>
+        <StatCard icon="🔬" label="Total Cases"      value={cases.length} delta=""    color="#2563eb" bg="#eff6ff"/>
+        <StatCard icon="✅" label="Diagnosed"        value={diagnosed}    delta=""    color="#0891b2" bg="#ecfeff"/>
+        <StatCard icon="⏳" label="Pending Review"   value={pending}      delta=""    color="#f59e0b" bg="#fffbeb"/>
+        <StatCard icon="⚠️" label="High Risk Cases"  value={highRisk}     delta=""    color="#dc2626" bg="#fef2f2"/>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }}>
-        <ChartCard title="Monthly Cases" sub="Last 7 months"><BarChart data={CHART_MONTHLY}/></ChartCard>
-        <ChartCard title="Diagnosis Distribution" sub="All-time breakdown"><DonutChart data={CHART_DONUT}/></ChartCard>
-      </div>
+      {charts && (
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }}>
+          <ChartCard title="Monthly Cases" sub="Last 7 months"><BarChart data={charts.monthly}/></ChartCard>
+          <ChartCard title="Diagnosis Distribution" sub="All-time breakdown"><DonutChart data={charts.donut}/></ChartCard>
+        </div>
+      )}
 
       <div style={{ background:'#fff', borderRadius:18, padding:22, border:'1.5px solid #e8f0fe', boxShadow:'0 2px 8px rgba(37,99,235,0.06)' }}>
         <div style={{ marginBottom:16 }}>
@@ -34,7 +49,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_CASES.slice(0,5).map((c,i) => (
+              {cases.slice(0, 5).map((c, i) => (
                 <tr key={c.id} style={{ borderBottom: i < 4 ? '1px solid #f8fafc' : 'none' }}
                   onMouseEnter={e => e.currentTarget.style.background='#f8faff'}
                   onMouseLeave={e => e.currentTarget.style.background='transparent'}>
@@ -53,6 +68,9 @@ export default function DashboardPage() {
                   <td style={{ padding:'11px 12px', fontSize:12, color:'#94a3b8' }}>{c.date}</td>
                 </tr>
               ))}
+              {cases.length === 0 && (
+                <tr><td colSpan={6} style={{ textAlign:'center', padding:'40px', color:'#94a3b8', fontSize:14 }}>No cases yet</td></tr>
+              )}
             </tbody>
           </table>
         </div>

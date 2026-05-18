@@ -62,4 +62,3 @@ export const DOC_STATUSES  = ['active', 'inactive', 'banned'];
 export const REPORT_TYPES  = ['Monthly', 'Quarterly', 'Annual', 'Special'];
 export const SPECIALTIES   = ['Dermatology','Skin Analysis','Oncology','Pathology','Surgery','General'];
 export const BLOOD_TYPES   = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
-export const DOCTORS_LIST  = ['Dr. Sara Ahmed','Dr. Omar Khalil','Dr. Nour Hassan','Dr. Mona Samir','Dr. Karim Adel'];

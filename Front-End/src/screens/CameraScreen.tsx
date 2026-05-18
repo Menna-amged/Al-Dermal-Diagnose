@@ -6,11 +6,13 @@ import {
   Alert,
   StatusBar,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import NavBar from "../components/NavBar";
 
 export default function CameraScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
 
   const handleCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -27,7 +29,7 @@ export default function CameraScreen({ navigation }: any) {
     });
 
     if (!result.canceled) {
-      navigation.navigate("Result", { imageUri: result.assets[0].uri });
+      navigation.navigate("Prediction", { imageUri: result.assets[0].uri });
     }
   };
 
@@ -46,12 +48,12 @@ export default function CameraScreen({ navigation }: any) {
     });
 
     if (!result.canceled) {
-      navigation.navigate("Result", { imageUri: result.assets[0].uri });
+      navigation.navigate("Prediction", { imageUri: result.assets[0].uri });
     }
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
       {/* Header */}
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: StatusBar.currentHeight ?? 0,
+    paddingTop: 0,
   },
   header: {
     flexDirection: "row",

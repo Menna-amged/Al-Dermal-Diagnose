@@ -7,7 +7,7 @@ export default function SplashScreen() {
     
         <Image source={require("../assets/splash.png")} style={styles.image} />
     
-      <Text style={styles.title}>Derm AI Diagnose</Text>
+      <Text style={styles.title}>dermaCam</Text>
       <Text style={styles.subtitle}>your AI powered skin health companion.</Text>
     </View>
   );

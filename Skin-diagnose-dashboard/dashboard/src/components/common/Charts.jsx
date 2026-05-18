@@ -1,16 +1,17 @@
 // components/common/Charts.jsx
 
 export function BarChart({ data }) {
-  const max = Math.max(...data.map(d => d.cases));
+  const max = Math.max(...data.map(d => d.cases), 1);
+  const BAR_MAX_H = 80;
   return (
-    <div style={{ display:'flex', alignItems:'flex-end', gap:10, height:120, padding:'0 4px' }}>
+    <div style={{ display:'flex', alignItems:'flex-end', gap:8, height:120, padding:'0 4px' }}>
       {data.map((d, i) => {
-        const pct = (d.cases / max) * 100;
+        const barH = Math.max(4, (d.cases / max) * BAR_MAX_H);
         const isLast = i === data.length - 1;
         return (
           <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
             <span style={{ fontSize:10, color: isLast ? '#2563eb' : '#94a3b8', fontWeight:700 }}>{d.cases}</span>
-            <div style={{ width:'100%', borderRadius:'5px 5px 0 0', height:`${pct}%`, background: isLast ? 'linear-gradient(180deg,#3b82f6,#2563eb)' : 'linear-gradient(180deg,#bfdbfe,#93c5fd)', minHeight:4 }} />
+            <div style={{ width:10, borderRadius:'4px 4px 0 0', height:barH, background: isLast ? 'linear-gradient(180deg,#3b82f6,#2563eb)' : 'linear-gradient(180deg,#bfdbfe,#93c5fd)' }} />
             <span style={{ fontSize:10, color:'#94a3b8', fontWeight:500 }}>{d.month}</span>
           </div>
         );

@@ -31,6 +31,8 @@ interface Props {
   showRegister?: boolean;
   returnTo?: string;
   setIsLoggedIn: (loggedIn: boolean) => void;
+  setUserType?: (type: string | null) => void;
+  setIsProfileComplete?: (v: boolean) => void;
 }
 
 export default function AuthLoginForm({
@@ -38,6 +40,8 @@ export default function AuthLoginForm({
   showRegister = false,
   returnTo = "PatientLogin",
   setIsLoggedIn,
+  setUserType,
+  setIsProfileComplete,
 }: Props) {
   return (
     // <KeyboardAwareScrollView
@@ -58,11 +62,16 @@ export default function AuthLoginForm({
           validationSchema={validationSchema}
           onSubmit={async (values, { setFieldError, setSubmitting }) => {
             try {
-              await login(values.email, values.password);
+              const type = returnTo === "DoctorLogin" ? "doctor" : "patient";
+              const data = await login(values.email, values.password, type);
+              setUserType?.(type);
+              if (type === "doctor") {
+                setIsProfileComplete?.(data.isProfileComplete ?? false);
+              }
               setIsLoggedIn(true);
             } catch (error: any) {
               const message =
-                error?.response?.data?.message || "Invalid email or password";
+                error?.response?.data?.error || error?.response?.data?.message || "Invalid email or password";
               setFieldError("password", message);
             } finally {
               setSubmitting(false);

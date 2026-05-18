@@ -1,4 +1,6 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import OnboardingScreen1 from "../screens/OnboardingScreen1";
+import OnboardingScreen2 from "../screens/OnboardingScreen2";
 import UserTypeScreen from "../screens/UserTypeScreen";
 import PatientLoginScreen from "../screens/PatientLoginScreen";
 import DoctorLoginScreen from "../screens/DoctorLoginScreen";
@@ -12,43 +14,62 @@ import VerificationScreen from "../screens/VerificationScreen";
 
 const Stack = createNativeStackNavigator();
 
-export default function AuthNavigator({ setIsLoggedIn }: { setIsLoggedIn: (loggedIn: boolean) => void }) {
+interface AuthNavigatorProps {
+  setIsLoggedIn: (v: boolean) => void;
+  setUserType: (v: string | null) => void;
+  setIsProfileComplete: (v: boolean) => void;
+}
+
+export default function AuthNavigator({ setIsLoggedIn, setUserType, setIsProfileComplete }: AuthNavigatorProps) {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Onboarding1" component={OnboardingScreen1} />
+      <Stack.Screen name="Onboarding2" component={OnboardingScreen2} />
       <Stack.Screen name="UserType" component={UserTypeScreen} />
 
-      {/* Patient Login */}
       <Stack.Screen
         name="PatientLogin"
         children={(props) => (
-          <PatientLoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />
+          <PatientLoginScreen
+            {...props}
+            setIsLoggedIn={setIsLoggedIn}
+            setUserType={setUserType}
+          />
         )}
       />
 
-      {/* Doctor Login */}
       <Stack.Screen
         name="DoctorLogin"
         children={(props) => (
-          <DoctorLoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />
+          <DoctorLoginScreen
+            {...props}
+            setIsLoggedIn={setIsLoggedIn}
+            setUserType={setUserType}
+            setIsProfileComplete={setIsProfileComplete}
+          />
         )}
       />
+
       <Stack.Screen name="Verification" component={VerificationScreen} />
       <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
       <Stack.Screen name="UserDetails" component={UserDetailsScreen} />
-<Stack.Screen
-  name="CreatePassword"
-  children={(props) => (
-    <CreatePasswordScreen {...props} setIsLoggedIn={setIsLoggedIn} />
-  )}
-/>
+
+      <Stack.Screen
+        name="CreatePassword"
+        children={(props) => (
+          <CreatePasswordScreen {...props} setIsLoggedIn={setIsLoggedIn} />
+        )}
+      />
 
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+
       <Stack.Screen
-  name="OTPCheck"
-  children={(props) => (
-    <OTPCheckScreen {...props} setIsLoggedIn={setIsLoggedIn} />
-  )}
-/>
+        name="OTPCheck"
+        children={(props) => (
+          <OTPCheckScreen {...props} setIsLoggedIn={setIsLoggedIn} />
+        )}
+      />
+
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     </Stack.Navigator>
   );

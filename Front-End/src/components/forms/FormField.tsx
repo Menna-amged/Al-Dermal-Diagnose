@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 type CustomFormFieldProps = {
   name: string;
-  width?: number | string;
+  width?: number;
   label?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   options?: string[]; // ✅ Dropdown options
@@ -187,7 +187,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightGray,
     borderRadius: 10,
     paddingHorizontal: 12,
-    color: colors.darkGray,
   },
 
   input: {

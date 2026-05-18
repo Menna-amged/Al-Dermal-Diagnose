@@ -1,60 +1,102 @@
-// services/index.js
-// All data-fetching / mutation logic lives here.
-// Swap the mock implementations for real API calls (fetch/axios) without
-// touching any component.
+import api from '../config/api';
 
-import {
-  MOCK_DOCTORS, MOCK_PATIENTS, MOCK_CASES, MOCK_REPORTS,
-} from '../data/MockData';
+// ─── Normalizers ──────────────────────────────────────────────────────────────
+const toDate = (iso) => (iso ? iso.split('T')[0] : '');
 
-const delay = (ms = 300) => new Promise(r => setTimeout(r, ms));
+const normalizeDoctor = (d) => ({
+  ...d,
+  status: d.status?.toLowerCase(),
+  joined: toDate(d.joinedAt),
+  avatar: d.avatar || d.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
+});
 
-// ─── internal in-memory stores (replace with API calls) ──────────────────────
-let _doctors  = [...MOCK_DOCTORS];
-let _patients = [...MOCK_PATIENTS];
-let _cases    = [...MOCK_CASES];
-let _reports  = [...MOCK_REPORTS];
+const normalizePatient = (p) => ({
+  ...p,
+  status: p.status?.toLowerCase(),
+  doctor: p.doctor?.name ?? p.doctor ?? '',
+  lastVisit: toDate(p.lastVisit),
+});
+
+const normalizeCase = (c) => ({
+  ...c,
+  displayId: c.formattedId || c.id,
+  patient: c.patientName ?? c.patient?.name ?? c.patient,
+  doctor:  c.doctorName  ?? c.doctor?.name  ?? c.doctor,
+  risk:    c.risk?.toLowerCase(),
+  status:  c.status?.toLowerCase(),
+  date:    toDate(c.date),
+});
+
+const normalizeReport = (r) => ({
+  ...r,
+  displayId: r.formattedId || r.id,
+  doctor: r.doctorName ?? r.doctor?.name ?? r.doctor,
+  status: r.status?.toLowerCase(),
+  type:   r.type ? r.type.charAt(0) + r.type.slice(1).toLowerCase() : r.type,
+  cases:  r.casesCount ?? r.cases,
+  date:   toDate(r.date),
+});
 
 // ─── Doctors ──────────────────────────────────────────────────────────────────
 export const DoctorService = {
-  getAll:    async ()        => { await delay(); return [..._doctors]; },
-  create:    async (data)    => { await delay(); const d = { ...data, id: Date.now(), cases: 0, joined: new Date().toISOString().split('T')[0], avatar: data.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) }; _doctors = [..._doctors, d]; return d; },
-  update:    async (id, data)=> { await delay(); _doctors = _doctors.map(d => d.id === id ? { ...d, ...data } : d); return _doctors.find(d => d.id === id); },
-  remove:    async (id)      => { await delay(); _doctors = _doctors.filter(d => d.id !== id); },
-  toggleBan: async (id)      => { await delay(); _doctors = _doctors.map(d => d.id === id ? { ...d, status: d.status === 'banned' ? 'active' : 'banned' } : d); return _doctors.find(d => d.id === id); },
+  getAll:    async ()         => { const { data } = await api.get('/doctors');          return data.map(normalizeDoctor); },
+  create:    async (d)        => { const { data } = await api.post('/doctors', d);      return normalizeDoctor(data); },
+  update:    async (id, d)    => { const { data } = await api.put(`/doctors/${id}`, d); return normalizeDoctor(data); },
+  remove:    async (id)       => { await api.delete(`/doctors/${id}`); },
+  toggleBan:   async (id)       => { const { data } = await api.post(`/doctors/${id}/toggle-ban`); return normalizeDoctor(data); },
+  setPassword: async (id, pwd)  => { const { data } = await api.patch(`/doctors/${id}/password`, { password: pwd }); return data; },
 };
 
 // ─── Patients ─────────────────────────────────────────────────────────────────
 export const PatientService = {
-  getAll:  async ()         => { await delay(); return [..._patients]; },
-  create:  async (data)     => { await delay(); const p = { ...data, id: Date.now(), lastVisit: new Date().toISOString().split('T')[0] }; _patients = [..._patients, p]; return p; },
-  update:  async (id, data) => { await delay(); _patients = _patients.map(p => p.id === id ? { ...p, ...data } : p); return _patients.find(p => p.id === id); },
-  remove:  async (id)       => { await delay(); _patients = _patients.filter(p => p.id !== id); },
+  getAll:  async ()         => { const { data } = await api.get('/patients');           return data.map(normalizePatient); },
+  create:  async (p)        => { const { data } = await api.post('/patients', p);       return normalizePatient(data); },
+  update:  async (id, p)    => { const { data } = await api.put(`/patients/${id}`, p);  return normalizePatient(data); },
+  remove:  async (id)       => { await api.delete(`/patients/${id}`); },
 };
 
 // ─── Cases ────────────────────────────────────────────────────────────────────
 export const CaseService = {
-  getAll:  async ()         => { await delay(); return [..._cases]; },
-  create:  async (data)     => { await delay(); const id = 'SK-' + String(_cases.length + 42).padStart(4, '0'); const c = { ...data, id, date: new Date().toISOString().split('T')[0] }; _cases = [c, ..._cases]; return c; },
-  update:  async (id, data) => { await delay(); _cases = _cases.map(c => c.id === id ? { ...c, ...data } : c); return _cases.find(c => c.id === id); },
-  remove:  async (id)       => { await delay(); _cases = _cases.filter(c => c.id !== id); },
+  getAll:  async ()      => { const { data } = await api.get('/cases');              return data.map(normalizeCase); },
+  create:  async (c)     => { const { data } = await api.post('/cases', c);          return normalizeCase(data); },
+  update:  async (id, c) => { const { data } = await api.put(`/cases/${id}`, c);     return normalizeCase(data); },
+  remove:  async (id)    => { await api.delete(`/cases/${id}`); },
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 export const ReportService = {
-  getAll:   async ()         => { await delay(); return [..._reports]; },
-  create:   async (data)     => { await delay(); const id = 'RPT-' + String(_reports.length + 5).padStart(3, '0'); const r = { ...data, id, date: new Date().toISOString().split('T')[0] }; _reports = [r, ..._reports]; return r; },
-  update:   async (id, data) => { await delay(); _reports = _reports.map(r => r.id === id ? { ...r, ...data } : r); return _reports.find(r => r.id === id); },
-  remove:   async (id)       => { await delay(); _reports = _reports.filter(r => r.id !== id); },
-  publish:  async (id)       => { await delay(); _reports = _reports.map(r => r.id === id ? { ...r, status: 'published' } : r); return _reports.find(r => r.id === id); },
+  getAll:   async ()      => { const { data } = await api.get('/reports');                    return data.map(normalizeReport); },
+  create:   async (r)     => { const { data } = await api.post('/reports', { ...r, casesCount: r.cases }); return normalizeReport(data); },
+  update:   async (id, r) => { const { data } = await api.put(`/reports/${id}`, { ...r, casesCount: r.cases }); return normalizeReport(data); },
+  remove:   async (id)    => { await api.delete(`/reports/${id}`); },
+  publish:  async (id)    => { const { data } = await api.post(`/reports/${id}/publish`); return normalizeReport(data); },
+};
+
+// ─── Statistics ───────────────────────────────────────────────────────────────
+const DONUT_COLORS = ['#2563eb', '#0891b2', '#16a34a', '#f59e0b', '#7c3aed', '#ec4899', '#f97316'];
+
+export const StatisticsService = {
+  get: async () => {
+    const { data } = await api.get('/statistics');
+    const total = data.donut.reduce((s, d) => s + d.value, 0);
+    return {
+      monthly:  data.monthly,
+      donut:    data.donut.map((d, i) => ({ label: d.label, pct: total > 0 ? Math.round((d.value / total) * 100) : 0, color: DONUT_COLORS[i % DONUT_COLORS.length] })),
+      accuracy: data.accuracy.map(a => ({ label: a.condition, acc: a.accuracy, cases: a.cases })),
+      age:      (() => { const t = data.ageDistribution.reduce((s, g) => s + g.count, 0); return data.ageDistribution.map(g => ({ group: g.group, pct: t > 0 ? Math.round((g.count / t) * 100) : 0 })); })(),
+      kpis:     data.kpis,
+    };
+  },
 };
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-import { MOCK_ADMIN } from '../data/MockData';
 export const AuthService = {
   login: async (email, password) => {
-    await delay(800);
-    if (email === MOCK_ADMIN.email && password === MOCK_ADMIN.password) return MOCK_ADMIN;
-    throw new Error('Invalid email or password.');
+    const { data } = await api.post('/auth/login', { email, password });
+    localStorage.setItem('dashboard_token', data.token);
+    return data.admin;
+  },
+  logout: () => {
+    localStorage.removeItem('dashboard_token');
   },
 };

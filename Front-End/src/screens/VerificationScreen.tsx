@@ -17,7 +17,7 @@ import { verifyOtp, resendOtp } from "../services/auth.service";
 function OTPInputs() {
   const { setFieldValue } = useFormikContext<any>();
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
-  const inputs = useRef<TextInput[]>([]);
+  const inputs = useRef<Array<TextInput | null>>([]);
 
   const updateCode = (newDigits: string[]) => {
     setDigits(newDigits);
@@ -43,7 +43,7 @@ function OTPInputs() {
       {digits.map((digit, index) => (
         <TextInput
           key={index}
-          ref={(ref) => (inputs.current[index] = ref!)}
+          ref={(ref) => { inputs.current[index] = ref; }}
           style={styles.otpInput}
           keyboardType="number-pad"
           maxLength={1}

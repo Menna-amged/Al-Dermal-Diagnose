@@ -4,6 +4,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NavBar from "../components/NavBar";
 
 const reports = [
@@ -15,6 +16,7 @@ const reports = [
 const tabs = ["All", "Reports", "Photos", "Doctors"];
 
 export default function HistoryScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState("All");
   const [query, setQuery] = useState("");
   const [imgErrors, setImgErrors] = useState<{ [key: number]: boolean }>({});
@@ -26,11 +28,10 @@ export default function HistoryScreen({ navigation }: any) {
   });
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#F3F4F6" />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>History</Text>
-        <TouchableOpacity><Ionicons name="ellipsis-vertical" size={22} color="#111" /></TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
@@ -91,7 +92,7 @@ export default function HistoryScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F3F4F6", paddingTop: StatusBar.currentHeight ?? 0 },
+  screen: { flex: 1, backgroundColor: "#F3F4F6" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12 },
   headerTitle: { fontSize: 22, fontWeight: "700", color: "#111" },
   searchContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#E5E7EB", marginHorizontal: 16, marginBottom: 14, borderRadius: 12, paddingHorizontal: 12, gap: 8 },

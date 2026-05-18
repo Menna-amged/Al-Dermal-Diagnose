@@ -2,20 +2,23 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const Base_URL = Platform.OS === 'web'
-  ? 'http://localhost:5000'
-  : 'http://192.168.1.15:5000';
+const HOST = Platform.OS === 'web' ? 'localhost' : '192.168.1.8';
 
-const api = axios.create({
-    baseURL: Base_URL,
+const makeApi = (port: number) => {
+  const instance = axios.create({
+    baseURL: `http://${HOST}:${port}`,
     timeout: 10000,
-    headers: {'Content-Type':'application/json' },
-});
+    headers: { 'Content-Type': 'application/json' },
+  });
+  instance.interceptors.request.use(async (config) => {
+    const token = await AsyncStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+  return instance;
+};
 
-api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+export const patientApi = makeApi(5000);
+export const doctorApi  = makeApi(5002);
 
-export default api;
+export default patientApi;

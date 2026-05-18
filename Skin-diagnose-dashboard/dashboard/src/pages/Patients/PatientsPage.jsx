@@ -1,20 +1,26 @@
 // pages/Patients/PatientsPage.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCrud } from '../../hooks/useCrud';
-import { PatientService } from '../../services';
+import { PatientService, DoctorService } from '../../services';
 import { useToast } from '../../context/ToastContext';
 import { Btn, Badge, Modal, ConfirmModal, FormField, Input, Select, Avatar, SearchBar, PageHeader, StatCard } from '../../components/common';
-import { DOCTORS_LIST } from '../../types';
 import { THead, EmptyRow, Loader } from '../Doctors/DoctorsPage';
 
-const BLANK = { name:'', email:'', phone:'', age:'', gender:'Female', doctor:'Dr. Sara Ahmed', status:'active' };
+const BLANK = { name:'', email:'', phone:'', age:'', gender:'Female', doctor:'', status:'active' };
 
 export default function PatientsPage() {
   const toast = useToast();
   const { items: patients, loading, create, update, remove } = useCrud(PatientService);
-  const [search, setSearch] = useState('');
-  const [modal,  setModal]  = useState(null);
-  const [form,   setForm]   = useState(BLANK);
+  const [doctors, setDoctors] = useState([]);
+  const [search,  setSearch]  = useState('');
+  const [modal,   setModal]   = useState(null);
+  const [form,    setForm]    = useState(BLANK);
+
+  useEffect(() => {
+    DoctorService.getAll()
+      .then(list => setDoctors(list.filter(d => d.status !== 'banned')))
+      .catch(() => {});
+  }, []);
 
   const filtered = patients.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -26,9 +32,13 @@ export default function PatientsPage() {
 
   const save = async () => {
     if (!form.name || !form.email) { toast('Please fill required fields', 'error'); return; }
-    if (modal.type === 'add') { await create({ ...form, age: parseInt(form.age) || 0 }); toast('Patient added ✓'); }
-    else                      { await update(modal.data.id, { ...form, age: parseInt(form.age) || modal.data.age }); toast('Patient updated ✓'); }
-    setModal(null);
+    try {
+      if (modal.type === 'add') { await create({ ...form, age: parseInt(form.age) || 0 }); toast('Patient added ✓'); }
+      else                      { await update(modal.data.id, { ...form, age: parseInt(form.age) || modal.data.age }); toast('Patient updated ✓'); }
+      setModal(null);
+    } catch (e) {
+      toast(e.message, 'error');
+    }
   };
 
   if (loading) return <Loader/>;
@@ -92,7 +102,12 @@ export default function PatientsPage() {
             <FormField label="Age">        <Input value={form.age}   onChange={e=>setForm({...form,age:e.target.value})}   placeholder="Age" type="number"/></FormField>
             <FormField label="Gender"><Select value={form.gender}    onChange={e=>setForm({...form,gender:e.target.value})}><option>Female</option><option>Male</option></Select></FormField>
           </div>
-          <FormField label="Assigned Doctor"><Select value={form.doctor} onChange={e=>setForm({...form,doctor:e.target.value})}>{DOCTORS_LIST.map(d=><option key={d}>{d}</option>)}</Select></FormField>
+          <FormField label="Assigned Doctor">
+            <Select value={form.doctor} onChange={e=>setForm({...form,doctor:e.target.value})}>
+              <option value="">— None —</option>
+              {doctors.map(d=><option key={d.id} value={d.name}>{d.name}</option>)}
+            </Select>
+          </FormField>
           <FormField label="Status"><Select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option value="active">Active</option><option value="inactive">Inactive</option></Select></FormField>
           <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:8 }}>
             <Btn variant="secondary" onClick={() => setModal(null)}>Cancel</Btn>

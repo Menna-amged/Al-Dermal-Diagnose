@@ -34,7 +34,7 @@ export default function AuthLayout({
           <>
             <View style={styles.circleTop} />
             <View style={styles.headerContent}>
-              <Text style={styles.appTitle}>DERMASCAN</Text>
+              <Text style={styles.appTitle}>DERMACAM</Text>
               <Text style={styles.appSubtitle}>DETECT . ANALYZE . HEAL</Text>
             </View>
             <View style={styles.circleBottom} />

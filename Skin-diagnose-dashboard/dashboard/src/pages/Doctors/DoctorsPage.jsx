@@ -3,10 +3,21 @@ import { useState } from 'react';
 import { useCrud } from '../../hooks/useCrud';
 import { DoctorService } from '../../services';
 import { useToast } from '../../context/ToastContext';
-import { Btn, Badge, Modal, ConfirmModal, FormField, Input, Select, Avatar, SearchBar, PageHeader, StatCard } from '../../components/common';
+import { Btn, Badge, Modal, ConfirmModal, FormField, Input, Avatar, SearchBar, PageHeader, StatCard } from '../../components/common';
 
-const BLANK = { name:'', email:'', phone:'', status:'active' };
+const BLANK = { email:'', status:'active', password:'' };
 
+const generatePassword = () => {
+  const upper  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lower  = 'abcdefghijklmnopqrstuvwxyz';
+  const digits = '0123456789';
+  const syms   = '!@#$%^&*()-_=+[]{}|;:,.<>?';
+  const all    = upper + lower + digits + syms;
+  const rand   = (set) => set[Math.floor(Math.random() * set.length)];
+  const base   = [rand(upper), rand(lower), rand(digits), rand(syms)];
+  for (let i = 0; i < 12; i++) base.push(rand(all));
+  return base.sort(() => Math.random() - 0.5).join('');
+};
 export default function DoctorsPage() {
   const toast = useToast();
   const { items: doctors, setItems, loading, create, update, remove } = useCrud(DoctorService);
@@ -20,18 +31,25 @@ export default function DoctorsPage() {
   );
 
   const openAdd  = () => { setForm(BLANK); setModal({ type:'add' }); };
-  const openEdit = (doc) => { setForm({ name:doc.name, email:doc.email, phone:doc.phone, status:doc.status }); setModal({ type:'edit', data:doc }); };
+  const openEdit = (doc) => { setForm({ email: doc.email, password: '' }); setModal({ type:'edit', data:doc }); };
 
   const save = async () => {
-    if (!form.name || !form.email) { toast('Please fill required fields', 'error'); return; }
-    if (modal.type === 'add') {
-      await create(form);
-      toast('Doctor added ✓');
-    } else {
-      await update(modal.data.id, form);
-      toast('Doctor updated ✓');
+    if (!form.email) { toast('Email is required', 'error'); return; }
+    if (!form.password || form.password.length < 8) {
+      toast('Generate or enter a password (min. 8 characters)', 'error'); return;
     }
-    setModal(null);
+    try {
+      if (modal.type === 'add') {
+        await create({ email: form.email, password: form.password });
+        toast('Doctor added ✓');
+      } else {
+        await update(modal.data.id, { email: form.email, password: form.password });
+        toast('Doctor updated ✓');
+      }
+      setModal(null);
+    } catch (e) {
+      toast(e.message, 'error');
+    }
   };
 
   const handleDelete = async (id) => { await remove(id); toast('Doctor removed', 'info'); };
@@ -99,18 +117,37 @@ export default function DoctorsPage() {
       {/* Add / Edit */}
       {(modal?.type==='add'||modal?.type==='edit') && (
         <Modal title={modal.type==='add'?'Add New Doctor':'Edit Doctor'} onClose={() => setModal(null)}>
-          <FormField label="Full Name *"><Input value={form.name}      onChange={e=>setForm({...form,name:e.target.value})}      placeholder="Dr. Full Name"/></FormField>
-          <FormField label="Email *">    <Input value={form.email}     onChange={e=>setForm({...form,email:e.target.value})}     placeholder="doctor@email.com" type="email"/></FormField>
-          <FormField label="Phone">      <Input value={form.phone}     onChange={e=>setForm({...form,phone:e.target.value})}     placeholder="+20 100 000 0000"/></FormField>
-          <FormField label="Status">
-            <Select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </Select>
+          <FormField label="Email *">
+            <Input value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="doctor@email.com" type="email"/>
+          </FormField>
+          <FormField label="Password *">
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <Input
+                type="text"
+                value={form.password}
+                onChange={e=>setForm({...form,password:e.target.value})}
+                placeholder="Click Generate or type a password"
+                style={{ fontFamily:'monospace', letterSpacing:'0.04em', flex:1 }}
+              />
+              <button
+                type="button"
+                onClick={() => { const p = generatePassword(); setForm(f => ({ ...f, password: p })); navigator.clipboard?.writeText(p).then(() => toast('Password copied', 'info')); }}
+                style={{
+                  padding:'0 18px', height:38, borderRadius:8, border:'none', cursor:'pointer',
+                  background:'linear-gradient(135deg,#2563eb,#7c3aed)', color:'#fff',
+                  fontWeight:700, fontSize:13, whiteSpace:'nowrap', flexShrink:0,
+                  transition:'opacity 0.15s',
+                }}
+                onMouseEnter={e=>e.currentTarget.style.opacity='0.85'}
+                onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+              >
+                Generate
+              </button>
+            </div>
           </FormField>
           <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:8 }}>
             <Btn variant="secondary" onClick={() => setModal(null)}>Cancel</Btn>
-            <Btn onClick={save}>{modal.type==='add'?'Add Doctor':'Save Changes'}</Btn>
+            <Btn onClick={save}>{modal.type==='add'?'Add Doctor':'Edit'}</Btn>
           </div>
         </Modal>
       )}

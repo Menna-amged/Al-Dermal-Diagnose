@@ -1,6 +1,11 @@
+import { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import WeatherCard from "../components/WeatherCard";
+import SunWarningCard from "../components/SunWarningCard";
 import FloatingChatButton from "../components/FloatingChatButton";
 import NavBar from "../components/NavBar";
 import colors from "../config/colors";
@@ -24,8 +29,24 @@ const steps = [
 ];
 
 export default function HomeScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
+  const [firstName, setFirstName] = useState("");
+  const [lastDisease, setLastDisease] = useState<string | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem("firstName").then((name) => setFirstName(name ?? ""));
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem("last_disease").then((val) => {
+        setLastDisease(val && val.length > 0 ? val : null);
+      });
+    }, [])
+  );
+
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       <ScrollView
@@ -34,13 +55,12 @@ export default function HomeScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.welcome}>Welcome back, Menna</Text>
-          <TouchableOpacity>
-            <Ionicons name="ellipsis-vertical" size={22} color="#111" />
-          </TouchableOpacity>
+          <Text style={styles.welcome}>Welcome back, {firstName}</Text>
         </View>
 
         <WeatherCard />
+
+        {lastDisease && <SunWarningCard disease={lastDisease} />}
 
         <Text style={styles.sectionTitle}>How It Works</Text>
         <View style={styles.stepsContainer}>
@@ -69,7 +89,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      <FloatingChatButton />
+      <FloatingChatButton navigation={navigation} />
       <NavBar navigation={navigation} activeTab="Home" />
     </View>
   );

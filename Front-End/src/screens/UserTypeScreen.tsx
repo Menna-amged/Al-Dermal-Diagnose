@@ -1,165 +1,140 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
-import colors from "../config/colors";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import AuthLayout from "../components/layout/AuthLayout";
-
-
+import colors from "../config/colors";
 
 function UserTypeScreen({ navigation }: any) {
   return (
-    <AuthLayout
-      headerHeight={240}
-  showCircles
-  showBack={false}
->
+    <AuthLayout headerHeight={240} showCircles showBack={false}>
+      <View style={styles.container}>
+        <Text style={styles.heading}>Who are you?</Text>
+        <Text style={styles.sub}>Select your role to continue</Text>
 
-      
-        <View style={styles.iconWrapper}>
-          <Ionicons name="shield-checkmark" size={28} color={colors.main} />
-        </View>
-
-        <Text style={styles.cardTitle}>Early detection saves lives.</Text>
-        <Text style={styles.cardText}>
-          Scan your skin and get instant{"\n"}AI-powered analysis.
-        </Text>
-
-        {/* dots */}
         <View style={styles.dots}>
+          <View style={styles.dot} />
+          <View style={styles.dot} />
           <View style={[styles.dot, styles.activeDot]} />
-          <View style={styles.dot} />
-          <View style={styles.dot} />
         </View>
-        <View style={styles.buttonsContainer}>
 
-        {/* Buttons */}
-        <TouchableOpacity
-          style={[styles.primaryButton , styles.buttonShadow]}
-          onPress={() => navigation.navigate("PatientLogin")}
-        >
-          <Text style={styles.primaryButtonText}>Patient</Text>
-        </TouchableOpacity>
+        <View style={styles.cards}>
+          {/* Patient card */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate("PatientLogin")}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: "#EAF3FF" }]}>
+              <Ionicons name="person" size={32} color={colors.main} />
+            </View>
+            <Text style={styles.cardLabel}>Patient</Text>
+            <Text style={styles.cardSub}>Scan & diagnose your skin</Text>
+            <View style={styles.arrow}>
+              <Ionicons name="arrow-forward" size={16} color={colors.main} />
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-         style={[styles.secondaryButton, styles.buttonShadow]}
-          onPress={() => navigation.navigate("DoctorLogin")}
-        >
-          <Text style={styles.secondaryButtonText}>Doctor</Text>
-        </TouchableOpacity>
-          </View>
-    
+          {/* Doctor card */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate("DoctorLogin")}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: "#EDFAF3" }]}>
+              <FontAwesome5 name="user-md" size={30} color="#16a34a" />
+            </View>
+            <Text style={styles.cardLabel}>Doctor</Text>
+            <Text style={styles.cardSub}>Review & diagnose patients</Text>
+            <View style={[styles.arrow, { backgroundColor: "#EDFAF3" }]}>
+              <Ionicons name="arrow-forward" size={16} color="#16a34a" />
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
     </AuthLayout>
   );
 }
 
 export default UserTypeScreen;
+
 const styles = StyleSheet.create({
-
-
-
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: colors.white,
-    letterSpacing: 1,
+  container: {
+    flex: 1,
+    paddingTop: 32,
+    alignItems: "center",
   },
-
-  subtitle: {
-    fontSize: 12,
-    color: colors.white,
-    marginTop:20,
-    opacity: 0.9,
+  heading: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#111",
+    marginBottom: 6,
   },
-
-
-  iconWrapper: {
-    width: 55,
-    height: 55,
-    borderRadius: 27,
-    backgroundColor: "#EAF1FF",
+  sub: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    marginBottom: 36,
+  },
+  cards: {
+    width: "100%",
+    gap: 16,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 22,
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    borderWidth: 1.5,
+    borderColor: "#F1F5F9",
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10,
-    marginBottom: 15,
-        alignSelf: "center",
-    
+    marginBottom: 14,
   },
-
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 6,
-    textAlign: "center",
+  cardLabel: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111",
+    marginBottom: 4,
   },
-
-  cardText: {
-    fontSize: 14,
-    color: colors.gray,
-    textAlign: "center",
-    marginBottom: 15,
+  cardSub: {
+    fontSize: 13,
+    color: "#9CA3AF",
   },
-
   dots: {
     flexDirection: "row",
-    marginBottom: 25,
     justifyContent: "center",
+    marginBottom: 28,
+    gap: 8,
   },
-
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: "#ccc",
-    marginHorizontal: 4,
   },
-
   activeDot: {
     backgroundColor: colors.main,
+    width: 18,
+    borderRadius: 3,
   },
-
-  primaryButton: {
-    width: "100%",
-    backgroundColor: colors.main,
-    paddingVertical: 14,
-    borderRadius: 30,
+  arrow: {
+    position: "absolute",
+    right: 22,
+    top: "50%",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EAF3FF",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
-  },
-buttonsContainer: {
-  width: "100%",
-  marginTop: "auto",   
-  paddingBottom: 20,
-},
- buttonShadow: {
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 10 },
-  shadowOpacity: 0.35,
-  shadowRadius: 12,
-  elevation: 14,
-},
-
-  primaryButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
-  secondaryButton: {
-      width: "100%",
-  backgroundColor: colors.white,
-  paddingVertical: 14,
-  borderRadius: 30,
-  alignItems: "center",
-  
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
   },
 });

@@ -1,26 +1,32 @@
 // pages/Cases/CasesPage.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCrud } from '../../hooks/useCrud';
-import { CaseService } from '../../services/';
+import { CaseService, DoctorService } from '../../services/';
 import { useToast } from '../../context/ToastContext';
 import { Btn, Badge, Modal, ConfirmModal, FormField, Input, Select, Textarea, SearchBar, PageHeader, StatCard } from '../../components/common';
-import { DOCTORS_LIST } from '../../types';
 import { THead, EmptyRow, Loader } from '../Doctors/DoctorsPage';
 
 const CONDITIONS = ['Melanoma','Eczema','Psoriasis','Basal Cell Carcinoma','Acne Vulgaris','Seborrheic Keratosis','Dermatitis','Rosacea'];
-const BLANK = { patient:'', doctor:'Dr. Sara Ahmed', condition:'', risk:'low', status:'pending', confidence:85, notes:'' };
+const BLANK = { patient:'', doctor:'', condition:'', risk:'low', status:'pending', confidence:85, notes:'' };
 const FILTERS = ['all','high','medium','low','pending','diagnosed','closed'];
 
 export default function CasesPage() {
   const toast = useToast();
   const { items: cases, loading, create, update, remove } = useCrud(CaseService);
-  const [search, setSearch]  = useState('');
-  const [filter, setFilter]  = useState('all');
-  const [modal,  setModal]   = useState(null);
-  const [form,   setForm]    = useState(BLANK);
+  const [doctors, setDoctors] = useState([]);
+  const [search,  setSearch]  = useState('');
+  const [filter,  setFilter]  = useState('all');
+  const [modal,   setModal]   = useState(null);
+  const [form,    setForm]    = useState(BLANK);
+
+  useEffect(() => {
+    DoctorService.getAll()
+      .then(list => setDoctors(list.filter(d => d.status !== 'banned')))
+      .catch(() => {});
+  }, []);
 
   const filtered = cases.filter(c => {
-    const matchSearch = c.patient.toLowerCase().includes(search.toLowerCase()) || c.condition.toLowerCase().includes(search.toLowerCase()) || c.id.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = c.patient.toLowerCase().includes(search.toLowerCase()) || c.condition.toLowerCase().includes(search.toLowerCase()) || (c.displayId||c.id).toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter==='all' || c.risk===filter || c.status===filter;
     return matchSearch && matchFilter;
   });
@@ -68,7 +74,7 @@ export default function CasesPage() {
                 <tr key={c.id} style={{ borderBottom: i < filtered.length-1 ? '1px solid #f8fafc' : 'none', transition:'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background='#f8faff'}
                   onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                  <td style={{ padding:'12px 14px', fontSize:12, fontWeight:700, color:'#2563eb' }}>{c.id}</td>
+                  <td style={{ padding:'12px 14px', fontSize:12, fontWeight:700, color:'#2563eb' }}>{c.displayId || c.id}</td>
                   <td style={{ padding:'12px 14px', fontSize:13, fontWeight:600, color:'#0f172a' }}>{c.patient}</td>
                   <td style={{ padding:'12px 14px', fontSize:12, color:'#64748b' }}>{c.doctor}</td>
                   <td style={{ padding:'12px 14px', fontSize:13, color:'#0f172a' }}>{c.condition}</td>
@@ -101,7 +107,12 @@ export default function CasesPage() {
         <Modal title={modal.type==='add'?'New Case':'Edit Case'} onClose={() => setModal(null)}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <FormField label="Patient Name *"><Input value={form.patient} onChange={e=>setForm({...form,patient:e.target.value})} placeholder="Patient name"/></FormField>
-            <FormField label="Doctor *"><Select value={form.doctor} onChange={e=>setForm({...form,doctor:e.target.value})}>{DOCTORS_LIST.map(d=><option key={d}>{d}</option>)}</Select></FormField>
+            <FormField label="Doctor *">
+              <Select value={form.doctor} onChange={e=>setForm({...form,doctor:e.target.value})}>
+                <option value="">— Select doctor —</option>
+                {doctors.map(d=><option key={d.id} value={d.name}>{d.name}</option>)}
+              </Select>
+            </FormField>
             <FormField label="Condition *">
               <Select value={form.condition} onChange={e=>setForm({...form,condition:e.target.value})}>
                 <option value="">Select condition…</option>
