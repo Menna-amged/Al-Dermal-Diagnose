@@ -22,6 +22,9 @@ import BuyTokensScreen from "../screens/BuyTokensScreen";
 import PatientDoctorProfileScreen from "../screens/PatientDoctorProfileScreen";
 import ConsultDoctorSelectScreen from "../screens/ConsultDoctorSelectScreen";
 import ConsultDoctorProfileScreen from "../screens/ConsultDoctorProfileScreen";
+import ChatScreen from "../screens/ChatScreen";
+import MyConsultationsScreen from "../screens/MyConsultationsScreen";
+import PremiumScreen from "../screens/PremiumScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -52,7 +55,12 @@ export default function PatientNavigator({ setIsLoggedIn }: { setIsLoggedIn: (v:
       <Stack.Screen name="PatientDoctorProfile" component={PatientDoctorProfileScreen} />
       <Stack.Screen name="ConsultDoctorSelect" component={ConsultDoctorSelectScreen} />
       <Stack.Screen name="ConsultDoctorProfile" component={ConsultDoctorProfileScreen} />
-      <Stack.Screen name="Login" component={AuthLoginForm} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="MyConsultations" component={MyConsultationsScreen} />
+      <Stack.Screen name="Premium" component={PremiumScreen} />
+      <Stack.Screen name="Login">
+        {(props) => <AuthLoginForm {...props} setIsLoggedIn={setIsLoggedIn} />}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 }

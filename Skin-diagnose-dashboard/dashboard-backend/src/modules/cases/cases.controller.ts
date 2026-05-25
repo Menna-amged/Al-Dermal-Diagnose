@@ -10,9 +10,9 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 export const update = async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json(await updateCase(req.params.id, req.body)); } catch (err) { next(err); }
+  try { res.json(await updateCase(req.params.id as string, req.body)); } catch (err) { next(err); }
 };
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
-  try { await deleteCase(req.params.id); res.json({ message: "Case deleted" }); } catch (err) { next(err); }
+  try { await deleteCase(req.params.id as string); res.json({ message: "Case deleted" }); } catch (err) { next(err); }
 };

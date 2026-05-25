@@ -10,6 +10,8 @@ import DiagnosisReportScreen from "../screens/DiagnosisReportScreen";
 import PatientDetailsScreen from "../screens/PatientDetailsScreen";
 import FinalDiagnosisScreen from "../screens/FinalDiagnosisScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import ConsultationsScreen from "../screens/ConsultationsScreen";
+import DoctorChatScreen from "../screens/DoctorChatScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +21,8 @@ export default function DoctorNavigator() {
       <Stack.Screen name="Home" component={DoctorHomescreen} />
       <Stack.Screen name="Schedule" component={ScheduleScreen} />
       <Stack.Screen name="Alerts" component={AlertsScreen} />
+      <Stack.Screen name="Consultations" component={ConsultationsScreen} />
+      <Stack.Screen name="DoctorChat" component={DoctorChatScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreenDoctor} />
       <Stack.Screen name="HelpFAQ" component={HelpFAQScreen} />

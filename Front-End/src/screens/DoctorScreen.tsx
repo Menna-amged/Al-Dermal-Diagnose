@@ -127,7 +127,7 @@ export default function DoctorScreen({ navigation }: any) {
 
   const openFilter = () => {
     setPendingGov(selectedGov);
-    setPendingDisease(pendingDisease);
+    setPendingDisease(selectedDisease);
     setShowFilter(true);
   };
 

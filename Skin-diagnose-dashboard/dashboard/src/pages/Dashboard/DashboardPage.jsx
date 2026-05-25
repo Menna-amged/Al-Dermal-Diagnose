@@ -30,7 +30,7 @@ export default function DashboardPage() {
       {charts && (
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }}>
           <ChartCard title="Monthly Cases" sub="Last 7 months"><BarChart data={charts.monthly}/></ChartCard>
-          <ChartCard title="Diagnosis Distribution" sub="All-time breakdown"><DonutChart data={charts.donut}/></ChartCard>
+          <ChartCard title="Diagnosis Distribution" sub="All-time breakdown"><DonutChart data={charts.donut} total={charts.kpis?.totalCases}/></ChartCard>
         </div>
       )}
 

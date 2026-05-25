@@ -33,7 +33,7 @@ export default function StatisticsPage() {
 
       <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:18 }}>
         <Card title="Monthly Cases" sub="Last 7 months"><BarChart data={stats.monthly}/></Card>
-        <Card title="Diagnosis Distribution" sub="All-time breakdown"><DonutChart data={stats.donut}/></Card>
+        <Card title="Diagnosis Distribution" sub="All-time breakdown"><DonutChart data={stats.donut} total={stats.kpis?.totalCases}/></Card>
       </div>
 
       {stats.accuracy.length > 0 && (

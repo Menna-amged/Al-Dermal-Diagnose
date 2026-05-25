@@ -13,6 +13,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import colors from "../config/colors";
+
+const ANGLE_LABELS = ["Overview", "Close-Up", "Side Angle"];
 
 async function runPrediction(imageUri: string): Promise<{ disease: string; confidence: number }> {
   await new Promise((res) => setTimeout(res, 2000));
@@ -20,38 +23,46 @@ async function runPrediction(imageUri: string): Promise<{ disease: string; confi
 }
 
 export default function PredictionScreen({ route, navigation }: any) {
-  const { imageUri } = route.params as { imageUri: string };
+  const { imageUris } = route.params as { imageUris: string[] };
 
   const [loading, setLoading]       = useState(true);
   const [disease, setDisease]       = useState("");
   const [confidence, setConfidence] = useState(0);
-  const [tokens, setTokens] = useState(0);
-
+  const [tokens, setTokens]         = useState(0);
+  const [activeImg, setActiveImg]   = useState(0);
 
   useEffect(() => {
-    if (!imageUri) {
-      Alert.alert("No image", "Please select an image first.");
+    if (!imageUris?.length) {
+      Alert.alert("No images", "Please go back and add your photos.");
       navigation.goBack();
     }
-  }, [imageUri]);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
       const val = await AsyncStorage.getItem("user_tokens");
-      setTokens(val ? parseInt(val) : 5);
-      const result = await runPrediction(imageUri);
+      const parsed = val ? parseInt(val) : 5;
+      const balance = parsed < 0 ? 5 : parsed;
+      if (balance !== parsed) await AsyncStorage.setItem("user_tokens", String(balance));
+      setTokens(balance);
+      const result = await runPrediction(imageUris[0]);
       setDisease(result.disease);
       setConfidence(result.confidence);
-
-      
       await AsyncStorage.setItem("last_disease", result.disease);
-
+      await saveScanToHistory(imageUris[0], result.disease, result.confidence);
       setLoading(false);
     };
-    if (imageUri) {
-      init();
-    }
+    if (imageUris?.length) init();
   }, []);
+
+  const saveScanToHistory = async (uri: string, dis: string, conf: number) => {
+    try {
+      const raw  = await AsyncStorage.getItem("skin_scan_history");
+      const prev = raw ? JSON.parse(raw) : [];
+      const entry = { id: Date.now().toString(), uri, disease: dis, confidence: conf, date: new Date().toISOString() };
+      await AsyncStorage.setItem("skin_scan_history", JSON.stringify([entry, ...prev].slice(0, 50)));
+    } catch {}
+  };
 
   const handleConsult = () => {
     if (tokens < 1) {
@@ -65,7 +76,12 @@ export default function PredictionScreen({ route, navigation }: any) {
       );
       return;
     }
-    navigation.navigate("ConsultDoctorSelect", { imageUri, disease, confidence, tokens });
+    navigation.navigate("ConsultDoctorSelect", {
+      imageUri: imageUris[0],
+      disease,
+      confidence,
+      tokens,
+    });
   };
 
   const confidenceColor =
@@ -76,7 +92,7 @@ export default function PredictionScreen({ route, navigation }: any) {
       <StatusBar barStyle="dark-content" backgroundColor="#F3F4F6" />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="chevron-back" size={24} color="#111" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Analysis Result</Text>
@@ -85,18 +101,38 @@ export default function PredictionScreen({ route, navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
+        {/* Main image viewer */}
         <View style={styles.imageCard}>
           <Image
-            source={{ uri: imageUri }}
+            source={{ uri: imageUris[activeImg] }}
             style={styles.image}
             resizeMode="cover"
           />
+          <View style={styles.angleLabel}>
+            <Text style={styles.angleLabelText}>{ANGLE_LABELS[activeImg]}</Text>
+          </View>
+        </View>
+
+        {/* Thumbnail strip */}
+        <View style={styles.thumbRow}>
+          {imageUris.map((uri, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={() => setActiveImg(i)}
+              style={[styles.thumb, i === activeImg && styles.thumbActive]}
+              activeOpacity={0.8}
+            >
+              <Image source={{ uri }} style={styles.thumbImg} resizeMode="cover" />
+              {i === activeImg && <View style={styles.thumbActiveBar} />}
+            </TouchableOpacity>
+          ))}
         </View>
 
         {loading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#2563EB" />
-            <Text style={styles.loadingText}>Analyzing your image...</Text>
+            <ActivityIndicator size="large" color={colors.main} />
+            <Text style={styles.loadingText}>Analyzing your photos…</Text>
+            <Text style={styles.loadingSubText}>Processing {imageUris.length} images</Text>
           </View>
         ) : (
           <>
@@ -104,9 +140,13 @@ export default function PredictionScreen({ route, navigation }: any) {
             <View style={styles.resultCard}>
               <View style={styles.resultHeader}>
                 <View style={styles.resultIconCircle}>
-                  <MaterialCommunityIcons name="stethoscope" size={22} color="#2563EB" />
+                  <MaterialCommunityIcons name="stethoscope" size={22} color={colors.main} />
                 </View>
                 <Text style={styles.resultTitle}>AI Prediction</Text>
+                <View style={styles.photoCountBadge}>
+                  <Ionicons name="images-outline" size={12} color="#6B7280" />
+                  <Text style={styles.photoCountText}>{imageUris.length} photos analyzed</Text>
+                </View>
               </View>
 
               <View style={styles.resultDivider} />
@@ -135,14 +175,14 @@ export default function PredictionScreen({ route, navigation }: any) {
               <View style={styles.disclaimerRow}>
                 <Ionicons name="information-circle-outline" size={16} color="#9CA3AF" />
                 <Text style={styles.disclaimerText}>
-                  This is not a medical diagnosis. Always consult a doctor.
+                  This is not a medical diagnosis. Always consult a qualified doctor.
                 </Text>
               </View>
             </View>
 
             {/* Tokens badge */}
             <View style={styles.tokensBadge}>
-              <MaterialCommunityIcons name="wallet-outline" size={16} color="#2563EB" />
+              <MaterialCommunityIcons name="wallet-outline" size={16} color={colors.main} />
               <Text style={styles.tokensBadgeText}>
                 You have <Text style={{ fontWeight: "700" }}>{tokens} tokens</Text>
               </Text>
@@ -161,7 +201,6 @@ export default function PredictionScreen({ route, navigation }: any) {
               </View>
             </TouchableOpacity>
 
-            {/* Skip */}
             <TouchableOpacity
               style={styles.skipBtn}
               onPress={() => navigation.navigate("Home")}
@@ -180,14 +219,32 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 12 },
   headerTitle: { fontSize: 18, fontWeight: "700", color: "#111" },
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 32 },
-  imageCard: { borderRadius: 16, overflow: "hidden", marginBottom: 16, height: 220, backgroundColor: "#E5E7EB" },
+
+  /* Image viewer */
+  imageCard: { borderRadius: 16, overflow: "hidden", marginBottom: 10, height: 220, backgroundColor: "#E5E7EB" },
   image: { width: "100%", height: "100%" },
-  loadingBox: { backgroundColor: "#fff", borderRadius: 16, padding: 40, alignItems: "center", gap: 16, marginBottom: 16 },
-  loadingText: { fontSize: 14, color: "#6B7280", marginTop: 8 },
+  angleLabel: { position: "absolute", bottom: 10, left: 10, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  angleLabelText: { color: "#fff", fontSize: 11, fontWeight: "600" },
+
+  /* Thumbnails */
+  thumbRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  thumb: { flex: 1, height: 60, borderRadius: 10, overflow: "hidden", borderWidth: 2, borderColor: "transparent" },
+  thumbActive: { borderColor: colors.main },
+  thumbImg: { width: "100%", height: "100%" },
+  thumbActiveBar: { position: "absolute", bottom: 0, left: 0, right: 0, height: 3, backgroundColor: colors.main },
+
+  /* Loading */
+  loadingBox: { backgroundColor: "#fff", borderRadius: 16, padding: 40, alignItems: "center", gap: 10, marginBottom: 16 },
+  loadingText: { fontSize: 14, color: "#6B7280" },
+  loadingSubText: { fontSize: 12, color: "#9CA3AF" },
+
+  /* Result card */
   resultCard: { backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
   resultHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 14 },
   resultIconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#EFF6FF", alignItems: "center", justifyContent: "center" },
-  resultTitle: { fontSize: 16, fontWeight: "700", color: "#111" },
+  resultTitle: { fontSize: 16, fontWeight: "700", color: "#111", flex: 1 },
+  photoCountBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#F3F4F6", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
+  photoCountText: { fontSize: 10, color: "#6B7280", fontWeight: "500" },
   resultDivider: { height: 1, backgroundColor: "#F3F4F6", marginVertical: 12 },
   diseaseLabel: { fontSize: 12, color: "#9CA3AF", marginBottom: 4 },
   diseaseName: { fontSize: 22, fontWeight: "700", color: "#111", marginBottom: 14 },
@@ -198,10 +255,11 @@ const styles = StyleSheet.create({
   progressFill: { height: "100%", borderRadius: 3 },
   disclaimerRow: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
   disclaimerText: { fontSize: 12, color: "#9CA3AF", flex: 1, lineHeight: 18 },
+
+  /* CTA */
   tokensBadge: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center", backgroundColor: "#EFF6FF", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, marginBottom: 12 },
-  tokensBadgeText: { fontSize: 13, color: "#2563EB" },
-  consultBtn: { backgroundColor: "#2563EB", borderRadius: 14, paddingVertical: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 },
-  consultBtnDisabled: { opacity: 0.6 },
+  tokensBadgeText: { fontSize: 13, color: colors.main },
+  consultBtn: { backgroundColor: colors.main, borderRadius: 14, paddingVertical: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 },
   consultBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
   consultTokenCost: { backgroundColor: "rgba(255,255,255,0.25)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   consultTokenCostText: { color: "#fff", fontSize: 11, fontWeight: "600" },

@@ -3,16 +3,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { CommonActions } from "@react-navigation/native";
 import colors from "../config/colors";
 
-type Tab = "Home" | "Doctor" | "Camera" | "History" | "Profile";
-
 type Props = {
   navigation: any;
-  activeTab?: Tab;
+  activeTab?: string;
 };
 
-function goToTab(navigation: any, tab: Tab) {
+function goToTab(navigation: any, tab: string) {
   if (tab === "Home") {
     navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Home" }] }));
+  } else if (tab === "Chats") {
+    navigation.navigate("MyConsultations");
   } else {
     navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "Home" }, { name: tab }] }));
   }
@@ -30,18 +30,18 @@ export default function NavBar({ navigation, activeTab = "Home" }: Props) {
           <Text style={[styles.navLabel, { color: color("Home") }]}>Home</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={() => goToTab(navigation, "Doctor")}>
-          <Ionicons name="medkit-outline" size={24} color={color("Doctor")} />
-          <Text style={[styles.navLabel, { color: color("Doctor") }]}>Doctor</Text>
+        <TouchableOpacity style={styles.navItem} onPress={() => goToTab(navigation, "Chats")}>
+          <Ionicons name="chatbubbles-outline" size={24} color={color("Chats")} />
+          <Text style={[styles.navLabel, { color: color("Chats") }]}>Chats</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navCenter} onPress={() => goToTab(navigation, "Camera")}>
           <Ionicons name="camera" size={28} color="#fff" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={() => goToTab(navigation, "History")}>
-          <Ionicons name="time-outline" size={24} color={color("History")} />
-          <Text style={[styles.navLabel, { color: color("History") }]}>History</Text>
+        <TouchableOpacity style={styles.navItem} onPress={() => goToTab(navigation, "Doctor")}>
+          <Ionicons name="medkit-outline" size={24} color={color("Doctor")} />
+          <Text style={[styles.navLabel, { color: color("Doctor") }]}>Doctors</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem} onPress={() => goToTab(navigation, "Profile")}>

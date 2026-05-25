@@ -8,8 +8,8 @@ export const getDoctors = async (req: Request, res: Response) => {
 
     const doctors = await prisma.doctor.findMany({
       where: {
+        isProfileComplete: true,
         user: {
-          isVerified: true,
           isBanned: false,
           ...(governorate ? { location: { contains: governorate as string, mode: "insensitive" } } : {}),
         },
@@ -45,7 +45,7 @@ export const getDoctors = async (req: Request, res: Response) => {
 
 export const getDoctorRecentCases = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const doctor = await prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) return res.status(404).json({ error: "Doctor not found" });
 
@@ -114,4 +114,11 @@ export const downgradeUser = async (req: Request, res: Response) => {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
+};
+
+export const savePushToken = async (req: Request, res: Response) => {
+  const { expoPushToken } = req.body;
+  if (!expoPushToken) return res.status(400).json({ error: "Token required" });
+  await prisma.user.update({ where: { id: (req as any).user.userId }, data: { expoPushToken } });
+  res.json({ ok: true });
 };

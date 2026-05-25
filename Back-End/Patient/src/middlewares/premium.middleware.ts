@@ -7,9 +7,9 @@ export const requirePremium = async (req: Request, res: Response, next: NextFunc
     return;
   }
 
-  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+  const patient = await prisma.patient.findUnique({ where: { userId: req.user.userId } });
 
-  if (!user?.isPremium) {
+  if (!patient?.isPremium) {
     res.status(403).json({ error: "Premium subscription required" });
     return;
   }

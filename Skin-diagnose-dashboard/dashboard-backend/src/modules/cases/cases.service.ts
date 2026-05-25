@@ -3,6 +3,27 @@ import { RiskLevel, CaseStatus } from "@prisma/client";
 
 const formatCaseId = (num: number) => `SK-${String(num).padStart(4, "0")}`;
 
+async function findPatientByName(fullName: string) {
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts[0];
+  const lastName  = parts.length > 1 ? parts.slice(1).join(" ") : undefined;
+  const user = await prisma.user.findFirst({
+    where: { role: "PATIENT", firstName, ...(lastName ? { lastName } : {}) },
+  });
+  return user ? prisma.patient.findUnique({ where: { userId: user.id } }) : null;
+}
+
+async function findDoctorByName(fullName: string) {
+  const cleaned = fullName.replace(/^dr\.?\s*/i, "").trim();
+  const parts = cleaned.split(/\s+/);
+  const firstName = parts[0];
+  const lastName  = parts.length > 1 ? parts.slice(1).join(" ") : undefined;
+  const user = await prisma.user.findFirst({
+    where: { role: "DOCTOR", firstName, ...(lastName ? { lastName } : {}) },
+  });
+  return user ? prisma.doctor.findUnique({ where: { userId: user.id } }) : null;
+}
+
 export const getAllCases = async () => {
   const cases = await prisma.case.findMany({ orderBy: { date: "desc" } });
   return cases.map((c) => ({ ...c, formattedId: formatCaseId(c.caseNumber) }));
@@ -14,15 +35,8 @@ export const createCase = async (data: {
 }) => {
   const { patient, doctor, risk, status, ...rest } = data;
 
-  const patientUser = await prisma.user.findFirst({ where: { role: "PATIENT", firstName: patient.split(" ")[0] } });
-  const patientRecord = patientUser
-    ? await prisma.patient.findUnique({ where: { userId: patientUser.id } })
-    : null;
-
-  const doctorUser = await prisma.user.findFirst({ where: { role: "DOCTOR", firstName: doctor.split(" ")[0] } });
-  const doctorRecord = doctorUser
-    ? await prisma.doctor.findUnique({ where: { userId: doctorUser.id } })
-    : null;
+  const patientRecord = await findPatientByName(patient);
+  const doctorRecord  = await findDoctorByName(doctor);
 
   return prisma.case.create({
     data: {

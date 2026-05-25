@@ -10,13 +10,13 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 export const update = async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json(await updateReport(req.params.id, req.body)); } catch (err) { next(err); }
+  try { res.json(await updateReport(req.params.id as string, req.body)); } catch (err) { next(err); }
 };
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
-  try { await deleteReport(req.params.id); res.json({ message: "Report deleted" }); } catch (err) { next(err); }
+  try { await deleteReport(req.params.id as string); res.json({ message: "Report deleted" }); } catch (err) { next(err); }
 };
 
 export const publish = async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json(await publishReport(req.params.id)); } catch (err) { next(err); }
+  try { res.json(await publishReport(req.params.id as string)); } catch (err) { next(err); }
 };

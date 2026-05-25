@@ -20,7 +20,7 @@ export function BarChart({ data }) {
   );
 }
 
-export function DonutChart({ data }) {
+export function DonutChart({ data, total }) {
   const size = 130, r = 48, cx = size / 2, cy = size / 2;
   const circ = 2 * Math.PI * r;
   let off = 0;
@@ -31,12 +31,15 @@ export function DonutChart({ data }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:18, flexWrap:'wrap' }}>
       <svg width={size} height={size} style={{ flexShrink:0 }}>
+        {slices.length === 0 && (
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e2e8f0" strokeWidth={18}/>
+        )}
         {slices.map((s, i) => (
           <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth={18}
             strokeDasharray={`${s.dash} ${s.gap}`}
             strokeDashoffset={-s.off + circ * 0.25} />
         ))}
-        <text x={cx} y={cy-5}  textAnchor="middle" fontSize={18} fontWeight={800} fill="#0f172a">1,284</text>
+        <text x={cx} y={cy-5}  textAnchor="middle" fontSize={18} fontWeight={800} fill="#0f172a">{total ?? 0}</text>
         <text x={cx} y={cy+13} textAnchor="middle" fontSize={9}  fontWeight={500} fill="#94a3b8">total</text>
       </svg>
       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>

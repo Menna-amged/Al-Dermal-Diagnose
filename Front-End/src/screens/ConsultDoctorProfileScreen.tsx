@@ -63,28 +63,21 @@ export default function ConsultDoctorProfileScreen({ route, navigation }: any) {
     setShowConfirm(false);
     setSending(true);
     try {
-      const newBalance = tokens - 1;
-      await AsyncStorage.setItem("user_tokens", String(newBalance));
-
-      const consultation = {
-        id: Date.now().toString(),
-        imageUri,
+      const { data: consultation } = await patientApi.post("/consultations", {
+        doctorId: doctor.id,
         disease,
         confidence,
-        doctorId: doctor.id,
-        doctorName: doctor.name,
-        status: "pending",
-        doctorReply: null,
-        createdAt: new Date().toISOString(),
-      };
-      const existing = await AsyncStorage.getItem("consultations");
-      const list = existing ? JSON.parse(existing) : [];
-      list.unshift(consultation);
-      await AsyncStorage.setItem("consultations", JSON.stringify(list));
+      });
 
-      navigation.navigate("ConsultationSent", { consultation });
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      // Only deduct token after backend confirms the consultation
+      await AsyncStorage.setItem("user_tokens", String(tokens - 1));
+
+      navigation.navigate("ConsultationSent", {
+        consultation: { ...consultation, doctorName: doctor.name },
+      });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? "Something went wrong. Please try again.";
+      Alert.alert("Error", msg);
     } finally {
       setSending(false);
     }

@@ -1,6 +1,16 @@
 import { prisma } from "../../config/prisma";
 import { ReportType, ReportStatus } from "@prisma/client";
 
+async function findDoctorByName(fullName: string) {
+  const cleaned = fullName.replace(/^dr\.?\s*/i, "").trim();
+  const parts = cleaned.split(/\s+/);
+  const firstName = parts[0];
+  const lastName  = parts.length > 1 ? parts.slice(1).join(" ") : undefined;
+  return prisma.user.findFirst({
+    where: { role: "DOCTOR", firstName, ...(lastName ? { lastName } : {}) },
+  });
+}
+
 const formatReportId = (num: number) => `RPT-${String(num).padStart(3, "0")}`;
 
 export const getAllReports = async () => {
@@ -14,9 +24,7 @@ export const createReport = async (data: {
 }) => {
   const { doctor, type, status, ...rest } = data;
 
-  const doctorRecord = await prisma.user.findFirst({
-    where: { role: "DOCTOR", firstName: doctor.split(" ")[0] },
-  });
+  const doctorRecord = await findDoctorByName(doctor);
 
   return prisma.report.create({
     data: {

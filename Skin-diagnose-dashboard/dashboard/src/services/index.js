@@ -99,4 +99,8 @@ export const AuthService = {
   logout: () => {
     localStorage.removeItem('dashboard_token');
   },
+  updateMe: async (payload) => {
+    const { data } = await api.patch('/auth/me', payload);
+    return data;
+  },
 };

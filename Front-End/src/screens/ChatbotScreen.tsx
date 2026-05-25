@@ -144,7 +144,7 @@ export default function ChatbotScreen() {
       setIsTyping(false);
       setMessages([{
         id: 'welcome-1', type: 'bot',
-        text: `Hi ${userName}! 👋 I'm your DermAI Assistant. I can help you analyze skin conditions, answer questions, or connect you with a doctor.`,
+        text: `Hi ${userName}! 👋 I'm your dermaCam Assistant. I can help you analyze skin conditions, answer questions, or connect you with a doctor.`,
         time: getTime(),
       }]);
     }, 1600);
@@ -230,7 +230,7 @@ export default function ChatbotScreen() {
           <Text style={styles.botAvatarText}>🤖</Text>
         </View>
         <View style={styles.botInfo}>
-          <Text style={styles.botName}>DermAI Assistant</Text>
+          <Text style={styles.botName}>dermaCam Assistant</Text>
           <View style={styles.statusRow}>
             <View style={styles.onlineDot} />
             <Text style={styles.statusText}>Online · Powered by AI</Text>

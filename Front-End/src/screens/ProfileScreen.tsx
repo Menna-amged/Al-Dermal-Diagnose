@@ -8,9 +8,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import colors from "../config/colors";
 
 const accountSettings = [
-  { id: 1, label: "Edit Profile",    route: "EditProfile", icon: <MaterialCommunityIcons name="account-edit-outline" size={22} color="#2563EB" /> },
-  { id: 2, label: "Change Password", route: "ChangePassword", icon: <MaterialCommunityIcons name="sync" size={22} color="#2563EB" /> },
-  { id: 3, label: "Location",        route: "Location", icon: <Ionicons name="location-outline" size={22} color="#2563EB" /> },
+  { id: 1, label: "Edit Profile",       route: "EditProfile",      icon: <MaterialCommunityIcons name="account-edit-outline" size={22} color="#2563EB" /> },
+  { id: 2, label: "Change Password",    route: "ChangePassword",   icon: <MaterialCommunityIcons name="sync" size={22} color="#2563EB" /> },
+  { id: 3, label: "Location",           route: "Location",         icon: <Ionicons name="location-outline" size={22} color="#2563EB" /> },
+  { id: 4, label: "History",            route: "History",          icon: <Ionicons name="time-outline" size={22} color="#2563EB" /> },
+  { id: 5, label: "My Plan",            route: "Premium",          icon: <MaterialCommunityIcons name="crown-outline" size={22} color="#F59E0B" /> },
 ];
 
 const legalSupport = [
@@ -55,9 +57,15 @@ function WalletCard({ tokens, navigation }: { tokens: number; navigation?: any }
           <Text style={styles.walletValue}>{tokens} tokens</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.buyBtn} activeOpacity={0.8} onPress={() => navigation?.navigate("BuyTokens")}>
-        <Text style={styles.buyBtnText}>Buy tokens</Text>
-      </TouchableOpacity>
+      <View style={styles.walletActions}>
+        <TouchableOpacity style={styles.buyBtn} activeOpacity={0.8} onPress={() => navigation?.navigate("BuyTokens")}>
+          <Text style={styles.buyBtnText}>Buy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.8} onPress={() => navigation?.navigate("Premium")}>
+          <MaterialCommunityIcons name="crown" size={13} color="#F59E0B" />
+          <Text style={styles.upgradeBtnText}>Premium</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -168,7 +176,10 @@ const styles = StyleSheet.create({
   walletIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#EFF6FF", alignItems: "center", justifyContent: "center" },
   walletLabel: { fontSize: 12, color: "#9CA3AF", marginBottom: 2 },
   walletValue: { fontSize: 16, fontWeight: "700", color: "#111" },
-  buyBtn: { backgroundColor: "#2563EB", paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20 },
+  walletActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  buyBtn: { backgroundColor: "#2563EB", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  upgradeBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#FFFBEB", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#FDE68A" },
+  upgradeBtnText: { fontSize: 12, fontWeight: "700", color: "#D97706" },
   buyBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
   logoutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#FEF2F2", borderRadius: 16, paddingVertical: 16, marginTop: 4 },
   logoutText: { fontSize: 15, fontWeight: "700", color: "#EF4444" },

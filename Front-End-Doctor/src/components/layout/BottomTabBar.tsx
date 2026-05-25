@@ -12,10 +12,10 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { name: "Home",     icon: "home-outline",          activeIcon: "home",          screen: "Home" },
-  { name: "Schedule", icon: "calendar-outline",      activeIcon: "calendar",      screen: "Schedule" },
-  { name: "Alerts",   icon: "notifications-outline", activeIcon: "notifications", screen: "Alerts" },
-  { name: "Settings", icon: "settings-outline",      activeIcon: "settings",      screen: "Settings" },
+  { name: "Home",          icon: "home-outline",            activeIcon: "home",              screen: "Home" },
+  { name: "Consultations", icon: "chatbubbles-outline",     activeIcon: "chatbubbles",       screen: "Consultations" },
+  { name: "Schedule",      icon: "calendar-outline",        activeIcon: "calendar",          screen: "Schedule" },
+  { name: "Settings",      icon: "settings-outline",        activeIcon: "settings",          screen: "Settings" },
 ];
 
 type Props = {
