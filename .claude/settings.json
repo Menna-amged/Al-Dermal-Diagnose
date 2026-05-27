@@ -12,7 +12,12 @@
       "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" status --short)",
       "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" remote -v)",
       "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" ls-files --error-unmatch \"Front-End/node_modules\")",
-      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" ls-files \"Skin_Diagnosis_Pipeline/models/\")"
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" ls-files \"Skin_Diagnosis_Pipeline/models/\")",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" pull origin main --no-rebase)",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" pull origin main --no-rebase --allow-unrelated-histories)",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" checkout --ours -- .)",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" add -A)",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" commit -m \"Merge remote history and keep local changes\")"
     ],
     "additionalDirectories": [
       "f:\\BNU\\fourth year\\Graduation Project\\Full Project\\Al-Dermal-Diagnose\\node_modules"
