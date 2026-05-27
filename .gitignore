@@ -1,1 +1,4 @@
 node_modules/
+
+# Skin diagnosis ML models (large binary files)
+Skin_Diagnosis_Pipeline/models/

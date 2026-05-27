@@ -73,49 +73,35 @@ export default function CameraScreen({ navigation }: any) {
 
   // ── pickers ──────────────────────────────────────────────────────────────
 
+  const openSettings = () => Linking.openURL("app-settings:");
+
   const openCamera = async () => {
     if (Platform.OS === "web") { openGallery(); return; }
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Camera Permission Required",
-          "Please allow camera access in your device settings.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
-          ]
-        );
-        return;
-      }
-      const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.85 });
-      if (!result.canceled) setPhoto(result.assets[0].uri);
-    } catch {
-      Alert.alert("Error", "Could not open the camera. Please try again.");
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Camera Access Required",
+        "Please allow camera access in Settings.",
+        [{ text: "Cancel", style: "cancel" }, { text: "Open Settings", onPress: openSettings }]
+      );
+      return;
     }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.85 });
+    if (!result.canceled) setPhoto(result.assets[0].uri);
   };
 
   const openGallery = async () => {
-    try {
-      if (Platform.OS === "android") {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert(
-            "Permission Required",
-            "Please allow photo access in your device settings.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Open Settings", onPress: () => Linking.openSettings() },
-            ]
-          );
-          return;
-        }
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.85 });
-      if (!result.canceled) setPhoto(result.assets[0].uri);
-    } catch {
-      Alert.alert("Error", "Could not open the gallery. Please try again.");
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Photo Access Required",
+        "Please allow photo library access in Settings.",
+        [{ text: "Cancel", style: "cancel" }, { text: "Open Settings", onPress: openSettings }]
+      );
+      return;
     }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.85 });
+    if (!result.canceled) setPhoto(result.assets[0].uri);
   };
 
   const handleSlotPress = () => {

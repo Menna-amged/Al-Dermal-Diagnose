@@ -8,9 +8,11 @@ export const login = async (email: string, password: string, userType: 'patient'
   const { data } = await getApi(userType).post('/auth/login', { email, password });
   await AsyncStorage.setItem('token', data.token);
   await AsyncStorage.setItem('isPremium', JSON.stringify(data.isPremium ?? false));
+  await AsyncStorage.setItem('premiumExpiresAt', data.premiumExpiresAt ?? '');
   await AsyncStorage.setItem('firstName', data.firstName ?? '');
   await AsyncStorage.setItem('userType', userType);
   await AsyncStorage.setItem('isProfileComplete', JSON.stringify(data.isProfileComplete ?? true));
+  await AsyncStorage.setItem('user_tokens', String(data.tokens ?? 0));
   return data;
 };
 

@@ -2,6 +2,7 @@ import { prisma } from "../../config/prisma";
 import { hashPassword, comparePassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
 import { sendOTP, sendPasswordResetOTP } from "../../config/mailer";
+import { isPremiumActive } from "../users/users.service";
 import crypto from "crypto";
 
 export const registerUser = async (data: {
@@ -41,17 +42,25 @@ export const registerUser = async (data: {
 export const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { patient: true },
+    include: { patient: true, doctor: true },
   });
   if (!user) throw new Error("User not found");
-
-  if (user.role !== "PATIENT") throw new Error("This email is registered as a doctor. Please use the doctor login.");
 
   const isValid = await comparePassword(password, user.password!);
   if (!isValid) throw new Error("Invalid credentials");
 
   if (!user.isVerified) throw new Error("Email not verified");
   if (user.isBanned) throw new Error("Your account has been suspended");
+
+  // Auto-expire premium for patients
+  if (user.patient && user.patient.isPremium && !isPremiumActive(user.patient)) {
+    await prisma.patient.update({
+      where: { userId: user.id },
+      data: { isPremium: false, premiumExpiresAt: null },
+    });
+    user.patient.isPremium = false;
+    user.patient.premiumExpiresAt = null;
+  }
 
   const token = generateToken(user.id, user.role);
   return { user, token };

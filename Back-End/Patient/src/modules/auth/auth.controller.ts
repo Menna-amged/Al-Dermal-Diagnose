@@ -16,7 +16,16 @@ export const login = async (req: Request, res: Response) => {
   try {
     const validated = loginSchema.parse(req.body);
     const { user, token } = await loginUser(validated.email, validated.password);
-    res.json({ message: "Login successful", token, isPremium: user.patient?.isPremium ?? false, firstName: user.firstName });
+    res.json({
+      message: "Login successful",
+      token,
+      role: user.role,
+      firstName: user.firstName,
+      isPremium: user.patient?.isPremium ?? false,
+      premiumExpiresAt: user.patient?.premiumExpiresAt ?? null,
+      tokens: user.patient?.tokens ?? 0,
+      isProfileComplete: user.doctor?.isProfileComplete ?? null,
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

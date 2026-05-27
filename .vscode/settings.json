@@ -1,5 +1,0 @@
-{
-    "git.ignoreLimitWarning": true,
-    "typescript.tsdk": "Al-Dermal-Diagnose/Front-End/node_modules/typescript/lib",
-    "typescript.enablePromptUseWorkspaceTsdk": true
-}

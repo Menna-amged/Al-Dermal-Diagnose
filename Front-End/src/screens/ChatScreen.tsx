@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { patientApi } from "../config/api";
 import colors from "../config/colors";
+import NavBar from "../components/NavBar";
 
 type Message = {
   id: string;
@@ -159,6 +160,7 @@ export default function ChatScreen({ route, navigation }: any) {
             <Text style={styles.refreshBtnText}>Check again</Text>
           </TouchableOpacity>
         </View>
+        <NavBar navigation={navigation} activeTab="Chats" />
       </SafeAreaView>
     );
   }
@@ -201,6 +203,7 @@ export default function ChatScreen({ route, navigation }: any) {
             <Text style={styles.newConsultBtnText}>Start New Scan</Text>
           </TouchableOpacity>
         </View>
+        <NavBar navigation={navigation} activeTab="Chats" />
       </SafeAreaView>
     );
   }
@@ -222,6 +225,7 @@ export default function ChatScreen({ route, navigation }: any) {
             <Text style={styles.refreshBtnText}>Try again</Text>
           </TouchableOpacity>
         </View>
+        <NavBar navigation={navigation} activeTab="Chats" />
       </SafeAreaView>
     );
   }
@@ -233,6 +237,7 @@ export default function ChatScreen({ route, navigation }: any) {
         <View style={styles.stateBox}>
           <ActivityIndicator size="large" color={colors.main} />
         </View>
+        <NavBar navigation={navigation} activeTab="Chats" />
       </SafeAreaView>
     );
   }
@@ -276,7 +281,7 @@ export default function ChatScreen({ route, navigation }: any) {
         </View>
       )}
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={0}>
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -313,6 +318,7 @@ export default function ChatScreen({ route, navigation }: any) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      <NavBar navigation={navigation} activeTab="Chats" />
     </SafeAreaView>
   );
 }

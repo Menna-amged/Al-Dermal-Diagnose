@@ -2,14 +2,13 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const Base_URL = Platform.OS === 'web'
-  ? 'http://localhost:5000'
-  : 'http://192.168.1.8:5000';
+const HOST = Platform.OS === 'web' ? 'localhost' : '192.168.1.2';
 
+// Single general-purpose API (port 5000) — handles both patients and doctors
 const api = axios.create({
-    baseURL: Base_URL,
-    timeout: 10000,
-    headers: {'Content-Type':'application/json' },
+  baseURL: `http://${HOST}:5000`,
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
 });
 
 api.interceptors.request.use(async (config) => {
@@ -17,5 +16,8 @@ api.interceptors.request.use(async (config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+// export const doctorApi  = makeApi(5002);  // doctor-specific endpoint — disabled
+// export const patientApi = makeApi(5000);   // kept as the general gate above
 
 export default api;

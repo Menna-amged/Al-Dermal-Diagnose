@@ -6,15 +6,15 @@ import DoctorNavigator from "./DoctorNavigator";
 import SplashScreen from "../screens/SplashScreen";
 
 export default function RootNavigator() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [userType, setUserType] = useState<string | null>("doctor");
+  const [userType, setUserType] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        const type = await AsyncStorage.getItem("userType");
+        const type  = await AsyncStorage.getItem("userType");
         if (token) {
           setIsLoggedIn(true);
           setUserType(type);
@@ -29,9 +29,16 @@ export default function RootNavigator() {
 
   if (isLoading) return <SplashScreen />;
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserType(null);
+  };
+
   return isLoggedIn ? (
-    userType === "doctor" ? <DoctorNavigator /> : <AppNavigator />
+    userType === "doctor"
+      ? <DoctorNavigator onLogout={handleLogout} />
+      : <AppNavigator onLogout={handleLogout} />
   ) : (
-    <AuthNavigator setIsLoggedIn={setIsLoggedIn} />
+    <AuthNavigator setIsLoggedIn={setIsLoggedIn} setUserType={setUserType} />
   );
 }

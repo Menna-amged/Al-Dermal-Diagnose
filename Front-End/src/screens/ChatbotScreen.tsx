@@ -11,68 +11,30 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
+import { chatbotApi } from '../config/api';
 
 type MessageType = 'bot' | 'user';
-
-interface DiagnosisResult {
-  label: string;
-  confidence: number;
-}
 
 interface Message {
   id: string;
   type: MessageType;
-  text?: string;
-  imageUri?: string;
-  results?: DiagnosisResult[];
+  text: string;
   time: string;
+}
+
+interface HistoryEntry {
+  role: string;
+  content: string;
 }
 
 const getTime = () =>
   new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 const uid = () => Math.random().toString(36).slice(2);
-
-function ConfidenceBar({ label, value }: { label: string; value: number }) {
-  const isPrimary = value > 50;
-  return (
-    <View style={styles.resultRow}>
-      <Text style={styles.resultLabel}>{label}</Text>
-      <View style={styles.barWrap}>
-        <View style={styles.barTrack}>
-          <View style={[styles.bar, { flex: value }, !isPrimary && styles.barSecondary]} />
-          <View style={{ flex: 100 - value }} />
-        </View>
-      </View>
-      <Text style={[styles.resultPct, !isPrimary && styles.resultPctSecondary]}>
-        {value}%
-      </Text>
-    </View>
-  );
-}
-
-function ResultCard({ results }: { results: DiagnosisResult[] }) {
-  return (
-    <View style={styles.resultCard}>
-      <View style={styles.resultHeader}>
-        <Text style={styles.resultIcon}>🔍</Text>
-        <Text style={styles.resultTitle}>Analysis Result</Text>
-      </View>
-      {results.map((r, i) => (
-        <ConfidenceBar key={i} label={r.label} value={r.confidence} />
-      ))}
-      <TouchableOpacity style={styles.resultAction}>
-        <Text style={styles.resultActionText}>View Full Report →</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
 
 function TypingIndicator() {
   return (
@@ -93,15 +55,9 @@ function BotMessage({ msg }: { msg: Message }) {
       <View style={styles.miniAvatar}>
         <Text style={styles.miniAvatarText}>🤖</Text>
       </View>
-      <View>
-        {msg.results ? (
-          <ResultCard results={msg.results} />
-        ) : (
-          <View style={styles.bubbleBot}>
-            <Text style={styles.bubbleBotText}>{msg.text}</Text>
-            <Text style={styles.timeBot}>{msg.time}</Text>
-          </View>
-        )}
+      <View style={styles.bubbleBot}>
+        <Text style={styles.bubbleBotText}>{msg.text}</Text>
+        <Text style={styles.timeBot}>{msg.time}</Text>
       </View>
     </View>
   );
@@ -110,41 +66,36 @@ function BotMessage({ msg }: { msg: Message }) {
 function UserMessage({ msg }: { msg: Message }) {
   return (
     <View style={styles.msgUser}>
-      {msg.imageUri ? (
-        <View style={styles.imgBubble}>
-          <Image source={{ uri: msg.imageUri }} style={styles.imgPreview} resizeMode="cover" />
-          {msg.text ? <Text style={styles.imgCaption}>{msg.text}</Text> : null}
-          <Text style={styles.timeUser}>{msg.time} ✓✓</Text>
-        </View>
-      ) : (
-        <View style={styles.bubbleUser}>
-          <Text style={styles.bubbleUserText}>{msg.text}</Text>
-          <Text style={styles.timeUser}>{msg.time} ✓✓</Text>
-        </View>
-      )}
+      <View style={styles.bubbleUser}>
+        <Text style={styles.bubbleUserText}>{msg.text}</Text>
+        <Text style={styles.timeUser}>{msg.time} ✓✓</Text>
+      </View>
     </View>
   );
 }
 
 export default function ChatbotScreen() {
   const navigation = useNavigation();
-  const route = useRoute<any>();
+  const route      = useRoute<any>();
   const userName: string = route.params?.userName ?? 'there';
   const insets = useSafeAreaInsets();
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages]       = useState<Message[]>([]);
+  const [inputText, setInputText]     = useState('');
+  const [isTyping, setIsTyping]       = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [chatHistory, setChatHistory] = useState<HistoryEntry[]>([]);
+
   const flatListRef = useRef<FlatList>(null);
 
+  // Welcome messages on mount
   useEffect(() => {
     const t1 = setTimeout(() => setIsTyping(true), 400);
     const t2 = setTimeout(() => {
       setIsTyping(false);
       setMessages([{
         id: 'welcome-1', type: 'bot',
-        text: `Hi ${userName}! 👋 I'm your dermaCam Assistant. I can help you analyze skin conditions, answer questions, or connect you with a doctor.`,
+        text: `Hi ${userName}! 👋 I'm DermaCam, your AI skin disease assistant. I can answer questions about 8 skin conditions in English and Arabic.`,
         time: getTime(),
       }]);
     }, 1600);
@@ -153,7 +104,7 @@ export default function ChatbotScreen() {
       setIsTyping(false);
       setMessages(prev => [...prev, {
         id: 'welcome-2', type: 'bot',
-        text: "You can send me a photo of your skin and I'll analyze it instantly using our ConvNeXt  model 🔬",
+        text: "Ask me about symptoms, causes, severity, or when to see a doctor. For image analysis, use the Camera tab 📷",
         time: getTime(),
       }]);
     }, 3800);
@@ -169,49 +120,45 @@ export default function ChatbotScreen() {
     scrollToBottom();
   }, []);
 
-  const simulateBotReply = useCallback((userText: string) => {
-    setIsTyping(true);
-    scrollToBottom();
-    setTimeout(() => {
-      setIsTyping(false);
-      addMessage({ id: uid(), type: 'bot', text: getBotReply(userText), time: getTime() });
-    }, 1400);
-  }, [addMessage]);
-
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = inputText.trim();
-    if (!text) return;
+    if (!text || isTyping) return;
+
     addMessage({ id: uid(), type: 'user', text, time: getTime() });
     setInputText('');
-    simulateBotReply(text);
+    setIsTyping(true);
+    scrollToBottom();
+
+    try {
+      const { data } = await chatbotApi.post('/chat', {
+        message: text,
+        history: chatHistory,
+      });
+
+      const reply = data.reply as string;
+      setIsTyping(false);
+      addMessage({ id: uid(), type: 'bot', text: reply, time: getTime() });
+      setChatHistory(prev => [
+        ...prev,
+        { role: 'user',      content: text  },
+        { role: 'assistant', content: reply },
+      ]);
+    } catch {
+      setIsTyping(false);
+      addMessage({
+        id: uid(), type: 'bot',
+        text: "I'm having trouble connecting right now. Please make sure the chatbot service is running and try again.",
+        time: getTime(),
+      });
+    }
   };
 
-  const handleAttach = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
-    if (!result.canceled && result.assets[0]) {
-      const uri = result.assets[0].uri;
-      addMessage({ id: uid(), type: 'user', imageUri: uri, text: 'Please analyze this.', time: getTime() });
-      setIsTyping(true);
-      scrollToBottom();
-      setTimeout(() => {
-        setIsTyping(false);
-        addMessage({
-          id: uid(), type: 'bot',
-          results: [
-            { label: 'Eczema', confidence: 87 },
-            { label: 'Psoriasis', confidence: 9 },
-            { label: 'Other', confidence: 4 },
-          ],
-          time: getTime(),
-        });
-        scrollToBottom();
-        setTimeout(() => {
-          addMessage({ id: uid(), type: 'bot', text: 'Based on the analysis, I recommend consulting a dermatologist. Would you like me to find one near you? 🏥', time: getTime() });
-        }, 600);
-      }, 2000);
-    }
+  const handleClearChat = () => {
+    setMenuVisible(false);
+    setMessages([]);
+    setChatHistory([]);
+    setIsTyping(false);
+    setInputText('');
   };
 
   const renderItem = ({ item }: { item: Message }) =>
@@ -223,17 +170,17 @@ export default function ChatbotScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => (navigation as any).goBack()} style={styles.backBtn}>
           <Text style={styles.backArrow}>‹</Text>
         </TouchableOpacity>
         <View style={styles.botAvatar}>
           <Text style={styles.botAvatarText}>🤖</Text>
         </View>
         <View style={styles.botInfo}>
-          <Text style={styles.botName}>dermaCam Assistant</Text>
+          <Text style={styles.botName}>DermaCam Assistant</Text>
           <View style={styles.statusRow}>
             <View style={styles.onlineDot} />
-            <Text style={styles.statusText}>Online · Powered by AI</Text>
+            <Text style={styles.statusText}>Online · RAG-powered AI</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.menuBtn} onPress={() => setMenuVisible(true)}>
@@ -245,12 +192,12 @@ export default function ChatbotScreen() {
       <Modal transparent visible={menuVisible} animationType="fade" onRequestClose={() => setMenuVisible(false)}>
         <Pressable style={styles.menuOverlay} onPress={() => setMenuVisible(false)}>
           <View style={[styles.menuDropdown, { top: insets.top + 70 }]}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); setMessages([]); setIsTyping(false); setInputText(''); }}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleClearChat}>
               <Text style={styles.menuItemIcon}>✏️</Text>
               <Text style={styles.menuItemText}>New Chat</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); setMessages([]); }}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleClearChat}>
               <Text style={styles.menuItemIcon}>🗑️</Text>
               <Text style={[styles.menuItemText, { color: '#FF3B30' }]}>Delete Chat</Text>
             </TouchableOpacity>
@@ -277,35 +224,29 @@ export default function ChatbotScreen() {
         />
 
         <View style={[styles.inputBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 10 }]}>
-          <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
-            <Text style={styles.attachIcon}>📎</Text>
-          </TouchableOpacity>
           <TextInput
             style={styles.inputField}
-            placeholder="Ask me anything..."
+            placeholder="Ask about a skin condition..."
             placeholderTextColor="#AEAEB2"
             value={inputText}
             onChangeText={setInputText}
             onSubmitEditing={handleSend}
             returnKeyType="send"
             multiline={false}
+            editable={!isTyping}
           />
-          <TouchableOpacity style={styles.sendBtn} onPress={handleSend} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={[styles.sendBtn, isTyping && { opacity: 0.5 }]}
+            onPress={handleSend}
+            activeOpacity={0.85}
+            disabled={isTyping}
+          >
             <Text style={styles.sendIcon}>➤</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </View>
   );
-}
-
-function getBotReply(text: string): string {
-  const t = text.toLowerCase();
-  if (t.includes('eczema')) return 'Eczema is a chronic skin condition causing inflammation and itching. It can be managed with moisturizers and topical treatments. Would you like more details? 🧴';
-  if (t.includes('doctor')) return 'I can help you find a nearby dermatologist. Head to the Doctor tab or I can connect you directly. 🏥';
-  if (t.includes('scan') || t.includes('photo')) return "Please tap the 📎 button to attach a skin photo and I'll analyze it instantly!";
-  if (t.includes('history')) return 'Your diagnosis history is available in the History tab. You can view past results and reports there 📋';
-  return "That's a great question! I'm here to help with any skin-related concerns. Could you provide more details? 🩺";
 }
 
 const styles = StyleSheet.create({
@@ -353,7 +294,7 @@ const styles = StyleSheet.create({
   miniAvatarText: { fontSize: 14 },
   bubbleBot: {
     backgroundColor: '#fff', borderRadius: 18, borderBottomLeftRadius: 4,
-    padding: 10, maxWidth: 220,
+    padding: 10, maxWidth: '75%',
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   bubbleBotText: { fontSize: 13, color: '#000', lineHeight: 20 },
@@ -361,28 +302,9 @@ const styles = StyleSheet.create({
   typingBubble: { paddingVertical: 12, paddingHorizontal: 16 },
 
   msgUser: { alignItems: 'flex-end' },
-  bubbleUser: { backgroundColor: '#1a3ed4', borderRadius: 18, borderBottomRightRadius: 4, padding: 10, maxWidth: 220 },
+  bubbleUser: { backgroundColor: '#1a3ed4', borderRadius: 18, borderBottomRightRadius: 4, padding: 10, maxWidth: '75%' },
   bubbleUserText: { fontSize: 13, color: '#fff', lineHeight: 20 },
   timeUser: { fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 4, textAlign: 'right' },
-
-  imgBubble: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', maxWidth: 200, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
-  imgPreview: { width: 200, height: 130 },
-  imgCaption: { fontSize: 12, color: '#555', padding: 8 },
-
-  resultCard: { backgroundColor: '#fff', borderRadius: 14, padding: 14, maxWidth: 230, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
-  resultHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-  resultIcon: { fontSize: 16 },
-  resultTitle: { fontSize: 13, fontWeight: '600', color: '#000' },
-  resultRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 6 },
-  resultLabel: { fontSize: 12, color: '#6E6E73', width: 70 },
-  barWrap: { flex: 1, height: 6, backgroundColor: '#F0F0F5', borderRadius: 10, overflow: 'hidden' },
-  barTrack: { flex: 1, flexDirection: 'row', height: 6 },
-  bar: { height: 6, borderRadius: 10, backgroundColor: '#1a3ed4' },
-  barSecondary: { backgroundColor: '#AEAEB2' },
-  resultPct: { fontSize: 11, color: '#1a3ed4', fontWeight: '600', width: 30, textAlign: 'right' },
-  resultPctSecondary: { color: '#AEAEB2' },
-  resultAction: { marginTop: 10, backgroundColor: '#1a3ed4', borderRadius: 10, padding: 9, alignItems: 'center' },
-  resultActionText: { fontSize: 12, color: '#fff', fontWeight: '500' },
 
   inputBar: {
     flexDirection: 'row', alignItems: 'center',
@@ -390,8 +312,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5, borderTopColor: '#E5E5EA',
     paddingTop: 10, paddingHorizontal: 10, gap: 8,
   },
-  attachBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
-  attachIcon: { fontSize: 16 },
   inputField: { flex: 1, backgroundColor: '#F2F2F7', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, fontSize: 13, color: '#000' },
   sendBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1a3ed4', alignItems: 'center', justifyContent: 'center' },
   sendIcon: { fontSize: 14, color: '#fff' },

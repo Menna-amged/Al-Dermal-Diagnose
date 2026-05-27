@@ -12,7 +12,12 @@ import VerificationScreen from "../screens/VerificationScreen";
 
 const Stack = createNativeStackNavigator();
 
-export default function AuthNavigator({ setIsLoggedIn }: { setIsLoggedIn: (loggedIn: boolean) => void }) {
+interface AuthNavigatorProps {
+  setIsLoggedIn: (loggedIn: boolean) => void;
+  setUserType: (type: string | null) => void;
+}
+
+export default function AuthNavigator({ setIsLoggedIn, setUserType }: AuthNavigatorProps) {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="UserType" component={UserTypeScreen} />
@@ -21,7 +26,7 @@ export default function AuthNavigator({ setIsLoggedIn }: { setIsLoggedIn: (logge
       <Stack.Screen
         name="PatientLogin"
         children={(props) => (
-          <PatientLoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />
+          <PatientLoginScreen {...props} setIsLoggedIn={setIsLoggedIn} setUserType={setUserType} />
         )}
       />
 
@@ -29,7 +34,7 @@ export default function AuthNavigator({ setIsLoggedIn }: { setIsLoggedIn: (logge
       <Stack.Screen
         name="DoctorLogin"
         children={(props) => (
-          <DoctorLoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />
+          <DoctorLoginScreen {...props} setIsLoggedIn={setIsLoggedIn} setUserType={setUserType} />
         )}
       />
       <Stack.Screen name="Verification" component={VerificationScreen} />

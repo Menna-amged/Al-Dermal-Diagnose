@@ -1,20 +1,43 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "../config/colors";
 import { common } from "../config/theme";
 import ProfileField from "../components/profile/ProfileField";
+import api from "../config/api";
+
+interface DoctorProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  specialty: string;
+  clinicName: string;
+  bio: string;
+}
 
 export default function ProfileScreen({ navigation }: any) {
-  const [name]      = useState("Dr. Ahmed Hassan");
-  const [email]     = useState("ahmed.hassan@dermclinic.com");
-  const [phone]     = useState("+20 100 123 4567");
-  const [specialty] = useState("Dermatology");
-  const [clinic]    = useState("Cairo Skin & Laser Center");
-  const [bio]       = useState("Board-certified dermatologist with 10+ years of experience in skin disease diagnosis and treatment.");
+  const [profile, setProfile] = useState<DoctorProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  useEffect(() => {
+    api.get("/users/me")
+      .then(({ data }) => setProfile(data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const name      = profile ? `Dr. ${profile.firstName} ${profile.lastName ?? ""}`.trim() : "";
+  const email     = profile?.email ?? "";
+  const phone     = profile?.phone ?? "";
+  const specialty = profile?.specialty ?? "";
+  const clinic    = profile?.clinicName ?? "";
+  const bio       = profile?.bio ?? "";
+
+  const initials = name
+    ? name.replace(/^Dr\.?\s*/i, "").split(" ").filter(Boolean).map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "";
 
   const fields = [
     { icon: "person-outline"        as const, label: "Full Name",       value: name,      onChange: () => {} },
@@ -24,6 +47,14 @@ export default function ProfileScreen({ navigation }: any) {
     { icon: "business-outline"      as const, label: "Clinic/Hospital", value: clinic,    onChange: () => {} },
     { icon: "document-text-outline" as const, label: "Bio",             value: bio,       onChange: () => {}, multiline: true },
   ];
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { alignItems: "center", justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color={colors.main} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>

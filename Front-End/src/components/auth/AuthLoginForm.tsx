@@ -70,8 +70,9 @@ export default function AuthLoginForm({
               }
               setIsLoggedIn(true);
             } catch (error: any) {
-              const message =
-                error?.response?.data?.error || error?.response?.data?.message || "Invalid email or password";
+              const message = error?.response
+                ? (error.response.data?.error || error.response.data?.message || "Invalid email or password")
+                : "Cannot connect to server. Make sure you're on the same WiFi as the backend.";
               setFieldError("password", message);
             } finally {
               setSubmitting(false);

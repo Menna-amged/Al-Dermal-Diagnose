@@ -4,6 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { patientApi } from "../config/api";
 
 type Package = {
   id: string;
@@ -74,11 +75,16 @@ export default function BuyTokensScreen({ navigation }: any) {
     setLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 900)); // simulated payment
-      const newBalance = balance + selectedPkg.tokens;
+      const { data } = await patientApi.post("/users/me/tokens/add", { amount: selectedPkg.tokens });
+      const newBalance = data.tokens;
       await AsyncStorage.setItem("user_tokens", String(newBalance));
       setBalance(newBalance);
       setSuccess(true);
     } catch {
+      const newBalance = balance + selectedPkg.tokens;
+      await AsyncStorage.setItem("user_tokens", String(newBalance));
+      setBalance(newBalance);
+      setSuccess(true);
     } finally {
       setLoading(false);
     }

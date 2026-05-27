@@ -44,9 +44,9 @@ export default function NavBar({ navigation, activeTab = "Home" }: Props) {
           <Text style={[styles.navLabel, { color: color("Doctor") }]}>Doctors</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={() => goToTab(navigation, "Profile")}>
-          <Ionicons name="person-outline" size={24} color={color("Profile")} />
-          <Text style={[styles.navLabel, { color: color("Profile") }]}>Profile</Text>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate("More")}>
+          <Ionicons name="grid-outline" size={24} color={activeTab === "More" ? "#2563EB" : "#9CA3AF"} />
+          <Text style={[styles.navLabel, { color: activeTab === "More" ? "#2563EB" : "#9CA3AF" }]}>More</Text>
         </TouchableOpacity>
 
       </View>

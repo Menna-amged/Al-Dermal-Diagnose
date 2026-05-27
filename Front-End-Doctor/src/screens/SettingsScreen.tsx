@@ -1,21 +1,33 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import colors from "../config/colors";
 import { common } from "../config/theme";
 import ScreenHeader from "../components/layout/ScreenHeader";
 import BottomTabBar from "../components/layout/BottomTabBar";
 import SettingSection from "../components/settings/SettingSection";
 
-export default function SettingsScreen({ navigation }: any) {
+export default function SettingsScreen({ navigation, onLogout }: any) {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [emailAlerts, setEmailAlerts] = useState(true);
 
+  const doLogout = async () => {
+    await AsyncStorage.multiRemove(["token", "userType", "firstName", "isPremium"]);
+    onLogout?.();
+  };
+
   const handleLogout = () => {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm("Are you sure you want to logout?")) {
+        doLogout();
+      }
+      return;
+    }
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: () => navigation.replace("Auth") },
+      { text: "Logout", style: "destructive", onPress: doLogout },
     ]);
   };
 

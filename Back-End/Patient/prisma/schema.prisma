@@ -50,6 +50,8 @@ model Patient {
   bloodType        String?
   lastVisit        DateTime?
   isPremium        Boolean        @default(false)
+  premiumExpiresAt DateTime?
+  tokens           Int            @default(0)
   assignedDoctorId String?
   assignedDoctor   Doctor?        @relation("PatientDoctor", fields: [assignedDoctorId], references: [id])
   cases            Case[]         @relation("PatientCases")

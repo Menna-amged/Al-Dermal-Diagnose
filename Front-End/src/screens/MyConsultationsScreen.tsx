@@ -8,6 +8,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { patientApi } from "../config/api";
 import colors from "../config/colors";
+import NavBar from "../components/NavBar";
 
 type Consultation = {
   id: string;
@@ -129,6 +130,8 @@ export default function MyConsultationsScreen({ navigation }: any) {
           }
         />
       )}
+
+      <NavBar navigation={navigation} activeTab="Chats" />
     </SafeAreaView>
   );
 }

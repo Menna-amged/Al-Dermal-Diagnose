@@ -7,10 +7,10 @@ import AlertsScreen from "../screens/AlertsScreen";
 
 const Stack = createNativeStackNavigator();
 
-export default function AppNavigator() {
+export default function AppNavigator({ onLogout }: { onLogout?: () => void }) {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Home" children={() => <HomeScreen onLogout={onLogout} />} />
       <Stack.Screen name="Schedule" component={ScheduleScreen} />
       <Stack.Screen name="Alerts" component={AlertsScreen} />
       <Stack.Screen name="PatientDetails" component={PatientDetailsScreen} />

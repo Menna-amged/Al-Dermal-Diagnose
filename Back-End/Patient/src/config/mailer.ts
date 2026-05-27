@@ -28,3 +28,12 @@ export const sendPasswordResetOTP = async (to: string, otp: string) => {
     html: `<p>Your password reset code is: <b>${otp}</b>.</p><p>If you did not request this, please ignore this email.</p>`,
   });
 };
+
+export const sendEmailChangeOTP = async (to: string, otp: string) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject: "DermaAI Email Change Verification",
+    html: `<p>Your verification code to confirm your new email address is: <b>${otp}</b>.</p><p>This code expires in 10 minutes. If you did not request this, please ignore.</p>`,
+  });
+};

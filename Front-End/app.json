@@ -29,6 +29,13 @@
     "plugins": [
       "expo-font",
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location to show accurate local weather for skin condition alerts.",
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location to show accurate local weather for skin condition alerts."
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to upload skin images for diagnosis.",

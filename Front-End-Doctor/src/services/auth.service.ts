@@ -1,12 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
 
+// const getApi = (userType: string) => userType === 'doctor' ? doctorApi : patientApi;  // dual routing disabled
+
 export const login = async (email: string, password: string, userType: string = 'patient') => {
   const { data } = await api.post('/auth/login', { email, password });
   await AsyncStorage.setItem('token', data.token);
-  await AsyncStorage.setItem('isPremium', JSON.stringify(data.isPremium));
-  await AsyncStorage.setItem('userType', userType);
-  return data;
+  await AsyncStorage.setItem('isPremium', JSON.stringify(data.isPremium ?? false));
+  await AsyncStorage.setItem('firstName', data.firstName ?? '');
+  // Use role from server response; fall back to the selected userType
+  const resolvedType = data.role === 'DOCTOR' ? 'doctor' : (data.role === 'PATIENT' ? 'patient' : userType);
+  await AsyncStorage.setItem('userType', resolvedType);
+  return { ...data, resolvedType };
 };
 
 export const register = async (payload: {

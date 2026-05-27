@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const fe=JSON.parse\\(fs.readFileSync\\('f:/BNU/fourth year/Graduation Project/Full Project/Al-Dermal-Diagnose/Front-End/package.json'\\)\\); console.log\\(Object.keys\\({...fe.dependencies,...\\(fe.devDependencies||{}\\)}\\).filter\\(k=>k.includes\\('web'\\)||k.includes\\('expo'\\)\\).join\\(', '\\)\\)\")",
+      "PowerShell(conda run python --version 2>$null)",
+      "PowerShell(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" status --short)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\kiril\\\\.claude\\\\projects\\\\f--BNU-fourth-year-Graduation-Project-Full-Project-Al-Dermal-Diagnose\\\\memory\")",
+      "Bash(Out-Null)",
+      "Bash(Select-String -Path \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\\\\Back-End\\\\Patient\\\\.env\" -Pattern \"JWT_SECRET\")",
+      "Bash(npx expo *)",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" status --short)",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" remote -v)",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" ls-files --error-unmatch \"Front-End/node_modules\")",
+      "Bash(git -C \"f:\\\\BNU\\\\fourth year\\\\Graduation Project\\\\Full Project\\\\Al-Dermal-Diagnose\" ls-files \"Skin_Diagnosis_Pipeline/models/\")"
+    ],
+    "additionalDirectories": [
+      "f:\\BNU\\fourth year\\Graduation Project\\Full Project\\Al-Dermal-Diagnose\\node_modules"
+    ]
+  }
+}

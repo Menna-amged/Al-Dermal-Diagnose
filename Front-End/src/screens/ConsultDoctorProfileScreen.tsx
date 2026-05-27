@@ -69,8 +69,13 @@ export default function ConsultDoctorProfileScreen({ route, navigation }: any) {
         confidence,
       });
 
-      // Only deduct token after backend confirms the consultation
-      await AsyncStorage.setItem("user_tokens", String(tokens - 1));
+      // Deduct token in DB, fall back to local-only if API fails
+      try {
+        const { data: tokenData } = await patientApi.post("/users/me/tokens/spend");
+        await AsyncStorage.setItem("user_tokens", String(tokenData.tokens));
+      } catch {
+        await AsyncStorage.setItem("user_tokens", String(tokens - 1));
+      }
 
       navigation.navigate("ConsultationSent", {
         consultation: { ...consultation, doctorName: doctor.name },

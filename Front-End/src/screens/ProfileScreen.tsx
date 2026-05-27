@@ -6,6 +6,7 @@ import NavBar from "../components/NavBar";
 import { useState, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import colors from "../config/colors";
+import { patientApi } from "../config/api";
 
 const accountSettings = [
   { id: 1, label: "Edit Profile",       route: "EditProfile",      icon: <MaterialCommunityIcons name="account-edit-outline" size={22} color="#2563EB" /> },
@@ -79,17 +80,24 @@ export default function ProfileScreen({ navigation, setIsLoggedIn }: any) {
 
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem("user_profile").then((data) => {
-        if (data) {
-          const profile = JSON.parse(data);
-          setName(profile.name ?? "");
-          setLastName(profile.lastName ?? "");
+      const loadProfile = async () => {
+        try {
+          const { data } = await patientApi.get("/users/me");
+          setName(data.firstName ?? "");
+          setLastName(data.lastName ?? "");
+        } catch {
+          const fn = await AsyncStorage.getItem("firstName").catch(() => "");
+          setName(fn ?? "");
+        }
+        const profileData = await AsyncStorage.getItem("user_profile").catch(() => null);
+        if (profileData) {
+          const profile = JSON.parse(profileData);
           setPhoto(profile.photo ?? null);
         }
-      });
-      AsyncStorage.getItem("user_tokens").then((val) => {
-        setTokens(val ? parseInt(val) : 5);
-      });
+        const val = await AsyncStorage.getItem("user_tokens");
+        setTokens(val ? parseInt(val) : 0);
+      };
+      loadProfile();
     }, [])
   );
 
@@ -151,7 +159,7 @@ export default function ProfileScreen({ navigation, setIsLoggedIn }: any) {
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      <NavBar navigation={navigation} activeTab="Profile" />
+      <NavBar navigation={navigation} activeTab="More" />
     </View>
   );
 }

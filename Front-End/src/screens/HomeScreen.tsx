@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import WeatherCard from "../components/WeatherCard";
-import SunWarningCard from "../components/SunWarningCard";
 import FloatingChatButton from "../components/FloatingChatButton";
 import NavBar from "../components/NavBar";
 import colors from "../config/colors";
@@ -31,7 +30,7 @@ const steps = [
 export default function HomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const [firstName, setFirstName] = useState("");
-  const [lastDisease, setLastDisease] = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem("firstName").then((name) => setFirstName(name ?? ""));
@@ -39,8 +38,8 @@ export default function HomeScreen({ navigation }: any) {
 
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem("last_disease").then((val) => {
-        setLastDisease(val && val.length > 0 ? val : null);
+      AsyncStorage.getItem("isPremium").then((premium) => {
+        setIsPremium(premium === "true");
       });
     }, [])
   );
@@ -58,9 +57,7 @@ export default function HomeScreen({ navigation }: any) {
           <Text style={styles.welcome}>Welcome back, {firstName}</Text>
         </View>
 
-        <WeatherCard />
-
-        {lastDisease && <SunWarningCard disease={lastDisease} />}
+        {isPremium && <WeatherCard />}
 
         <Text style={styles.sectionTitle}>How It Works</Text>
         <View style={styles.stepsContainer}>
@@ -85,6 +82,15 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={styles.scanBtnText}>Scan Your Skin Now</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={styles.moreCard}
+          onPress={() => navigation.navigate("More")}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="grid-outline" size={20} color="#2563EB" />
+          <Text style={styles.moreCardText}>See all features in More →</Text>
+        </TouchableOpacity>
 
         <View style={{ height: 20 }} />
       </ScrollView>
@@ -134,9 +140,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
+    marginBottom: 16,
   },
   scanTitle: { fontSize: 20, fontWeight: "800", color: "#111", marginBottom: 6 },
   scanSubtitle: { color: "#6B7280", fontSize: 14, marginBottom: 18 },
   scanBtn: { backgroundColor: "#2563EB", borderRadius: 50, paddingVertical: 16, alignItems: "center" },
   scanBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+
+  moreCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  moreCardText: { color: "#2563EB", fontWeight: "700", fontSize: 14 },
 });

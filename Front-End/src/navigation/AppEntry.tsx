@@ -5,54 +5,51 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
+import * as SplashScreen from "expo-splash-screen";
 import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import api from "../config/api";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert:  true,
-    shouldShowBanner: true,
-    shouldShowList:   true,
-    shouldPlaySound:  true,
-    shouldSetBadge:   true,
-  }),
-});
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-async function registerPushToken() {
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert:  true,
+      shouldShowBanner: true,
+      shouldShowList:   true,
+      shouldPlaySound:  true,
+      shouldSetBadge:   true,
+    }),
+  });
+} catch {}
+
+async function requestNotificationPermission() {
   try {
-    if (!Device.isDevice) return;
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("default", {
         name: "default",
         importance: Notifications.AndroidImportance.MAX,
       });
     }
-    const { status: existing } = await Notifications.getPermissionsAsync();
-    let finalStatus = existing;
-    if (existing !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") return;
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
-    const authToken = await AsyncStorage.getItem("token");
-    if (authToken && token) {
-      await api.patch("/users/me/push-token", { expoPushToken: token }).catch(() => {});
-    }
+    await Notifications.requestPermissionsAsync();
   } catch {}
 }
 
 export default function AppEntry() {
-  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    Font.loadAsync(Ionicons.font).then(() => setFontsLoaded(true));
-    registerPushToken();
+    async function prepare() {
+      await Font.loadAsync(Ionicons.font).catch(() => {});
+      setReady(true);
+      await SplashScreen.hideAsync().catch(() => {});
+      // Ask for notifications after the app is visible
+      await requestNotificationPermission();
+    }
+    prepare();
   }, []);
 
-  if (!fontsLoaded) return null;
+  if (!ready) return null;
+
   return (
     <SafeAreaProvider>
       <NavigationContainer>

@@ -15,7 +15,7 @@ import DoctorChatScreen from "../screens/DoctorChatScreen";
 
 const Stack = createNativeStackNavigator();
 
-export default function DoctorNavigator() {
+export default function DoctorNavigator({ onLogout }: { onLogout?: () => void }) {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home" component={DoctorHomescreen} />
@@ -23,7 +23,7 @@ export default function DoctorNavigator() {
       <Stack.Screen name="Alerts" component={AlertsScreen} />
       <Stack.Screen name="Consultations" component={ConsultationsScreen} />
       <Stack.Screen name="DoctorChat" component={DoctorChatScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Settings" children={(props) => <SettingsScreen {...props} onLogout={onLogout} />} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreenDoctor} />
       <Stack.Screen name="HelpFAQ" component={HelpFAQScreen} />
       <Stack.Screen name="TermsPrivacy" component={TermsPrivacyScreen} />

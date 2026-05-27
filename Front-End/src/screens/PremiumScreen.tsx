@@ -31,23 +31,27 @@ const PREMIUM_FEATURES = [
   { icon: "wallet-outline",           label: "3 starter tokens (300 EGP value)",       included: true },
   { icon: "star-outline",             label: "Priority doctor matching",               included: true },
   { icon: "shield-checkmark-outline", label: "Verified specialist access",             included: true },
+  { icon: "partly-sunny-outline",     label: "Weather-based skin condition alerts",    included: true },
 ];
 
 export default function PremiumScreen({ navigation }: any) {
-  const [isPremium, setIsPremium]   = useState(false);
-  const [scansLeft, setScansLeft]   = useState(4);
-  const [tokens, setTokens]         = useState(0);
-  const [upgrading, setUpgrading]   = useState(false);
-  const [activeTab, setActiveTab]   = useState<"free" | "premium">("premium");
+  const [isPremium, setIsPremium]         = useState(false);
+  const [expiresAt, setExpiresAt]         = useState<string | null>(null);
+  const [scansLeft, setScansLeft]         = useState(4);
+  const [tokens, setTokens]               = useState(0);
+  const [upgrading, setUpgrading]         = useState(false);
+  const [activeTab, setActiveTab]         = useState<"free" | "premium">("premium");
 
   useFocusEffect(
     useCallback(() => {
       Promise.all([
         AsyncStorage.getItem("isPremium"),
+        AsyncStorage.getItem("premiumExpiresAt"),
         AsyncStorage.getItem("user_tokens"),
         AsyncStorage.getItem("scans_used"),
-      ]).then(([premium, tok, scans]) => {
+      ]).then(([premium, exp, tok, scans]) => {
         setIsPremium(premium === "true");
+        setExpiresAt(exp && exp.length > 0 ? exp : null);
         setTokens(tok ? Math.max(0, parseInt(tok)) : 0);
         const used = scans ? parseInt(scans) : 0;
         setScansLeft(Math.max(0, 4 - used));
@@ -58,13 +62,15 @@ export default function PremiumScreen({ navigation }: any) {
   const handleUpgrade = async () => {
     setUpgrading(true);
     try {
-      await patientApi.patch("/users/me/upgrade");
+      const { data } = await patientApi.patch("/users/me/upgrade");
       const newTokens = tokens + 3;
       await Promise.all([
         AsyncStorage.setItem("isPremium", "true"),
+        AsyncStorage.setItem("premiumExpiresAt", data.user?.premiumExpiresAt ?? ""),
         AsyncStorage.setItem("user_tokens", String(newTokens)),
       ]);
       setIsPremium(true);
+      setExpiresAt(data.user?.premiumExpiresAt ?? null);
       setTokens(newTokens);
     } catch (e: any) {
       Alert.alert("Error", e?.response?.data?.error ?? "Could not upgrade. Please try again.");
@@ -105,9 +111,16 @@ export default function PremiumScreen({ navigation }: any) {
           </Text>
 
           {isPremium && (
-            <View style={styles.premiumActiveBadge}>
-              <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-              <Text style={styles.premiumActiveText}>Premium Active</Text>
+            <View style={{ alignItems: "center", gap: 6 }}>
+              <View style={styles.premiumActiveBadge}>
+                <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
+                <Text style={styles.premiumActiveText}>Premium Active</Text>
+              </View>
+              {expiresAt && (
+                <Text style={styles.expiryText}>
+                  Renews on {new Date(expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                </Text>
+              )}
             </View>
           )}
         </View>
@@ -261,6 +274,7 @@ const styles = StyleSheet.create({
   heroSub: { fontSize: 13, color: "#6B7280", textAlign: "center", lineHeight: 20 },
   premiumActiveBadge: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#DCFCE7", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginTop: 4 },
   premiumActiveText: { fontSize: 12, fontWeight: "700", color: "#16A34A" },
+  expiryText: { fontSize: 11, color: "#9CA3AF" },
 
   // Status row
   statusRow: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 16, paddingVertical: 16, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
