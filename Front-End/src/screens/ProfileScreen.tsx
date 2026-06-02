@@ -1,0 +1,168 @@
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Image } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import NavBar from "../components/NavBar";
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import colors from "../config/colors";
+import { patientApi } from "../config/api";
+
+const accountSettings = [
+  { id: 1, label: "Edit Profile",       route: "EditProfile",      icon: <MaterialCommunityIcons name="account-edit-outline" size={22} color="#2563EB" /> },
+  { id: 2, label: "Change Password",    route: "ChangePassword",   icon: <MaterialCommunityIcons name="sync" size={22} color="#2563EB" /> },
+  { id: 3, label: "Location",           route: "Location",         icon: <Ionicons name="location-outline" size={22} color="#2563EB" /> },
+  { id: 4, label: "History",            route: "History",          icon: <Ionicons name="time-outline" size={22} color="#2563EB" /> },
+  { id: 5, label: "My Plan",            route: "Premium",          icon: <MaterialCommunityIcons name="crown-outline" size={22} color="#F59E0B" /> },
+];
+
+const legalSupport = [
+  { id: 1, label: "Terms & Conditions", route: "Terms",       icon: <MaterialCommunityIcons name="file-document-outline" size={22} color="#2563EB" /> },
+  { id: 2, label: "Privacy Policy",     route: "Privacy",     icon: <MaterialCommunityIcons name="shield-lock-outline" size={22} color="#2563EB" /> },
+  { id: 3, label: "Helps & Support",    route: "HelpSupport", icon: <MaterialCommunityIcons name="help-circle-outline" size={22} color="#2563EB" /> },
+  { id: 4, label: "Feedback",           route: "Feedback",    icon: <Ionicons name="chatbox-outline" size={22} color="#2563EB" /> },
+  { id: 5, label: "About",              route: "About",       icon: <Ionicons name="information-circle-outline" size={22} color="#2563EB" /> },
+];
+
+function SettingsGroup({ items, navigation }: { items: typeof accountSettings; navigation?: any }) {
+  return (
+    <View style={styles.group}>
+      {items.map((item, index) => (
+        <View key={item.id}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => item.route && navigation?.navigate(item.route)}
+          >
+            <View style={styles.rowLeft}>
+              {item.icon}
+              <Text style={styles.rowLabel}>{item.label}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+          </TouchableOpacity>
+          {index < items.length - 1 && <View style={styles.rowDivider} />}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function WalletCard({ tokens, navigation }: { tokens: number; navigation?: any }) {
+  return (
+    <View style={styles.walletCard}>
+      <View style={styles.walletLeft}>
+        <View style={styles.walletIconCircle}>
+          <MaterialCommunityIcons name="wallet-outline" size={20} color="#2563EB" />
+        </View>
+        <View>
+          <Text style={styles.walletLabel}>My tokens</Text>
+          <Text style={styles.walletValue}>{tokens} tokens</Text>
+        </View>
+      </View>
+      <View style={styles.walletActions}>
+        <TouchableOpacity style={styles.buyBtn} activeOpacity={0.8} onPress={() => navigation?.navigate("BuyTokens")}>
+          <Text style={styles.buyBtnText}>Buy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.8} onPress={() => navigation?.navigate("Premium")}>
+          <MaterialCommunityIcons name="crown" size={13} color="#F59E0B" />
+          <Text style={styles.upgradeBtnText}>Premium</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+export default function ProfileScreen({ navigation, setIsLoggedIn }: any) {
+  const insets = useSafeAreaInsets();
+  const [name, setName]     = useState("");
+  const [lastName, setLastName] = useState("");
+  const [photo, setPhoto]   = useState<string | null>(null);
+  const [tokens, setTokens] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadProfile = async () => {
+        try {
+          const { data } = await patientApi.get("/users/me");
+          setName(data.firstName ?? "");
+          setLastName(data.lastName ?? "");
+        } catch {
+          const fn = await AsyncStorage.getItem("firstName").catch(() => "");
+          setName(fn ?? "");
+        }
+        const photoData = await AsyncStorage.getItem("user_photo").catch(() => null);
+        setPhoto(photoData || null);
+        const val = await AsyncStorage.getItem("user_tokens");
+        setTokens(val ? parseInt(val) : 0);
+      };
+      loadProfile();
+    }, [])
+  );
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F3F4F6" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color="#111" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={{ width: 22 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.avatarContainer}>
+          {photo && photo.length > 0 ? (
+            <Image source={{ uri: photo }} style={styles.avatarImage} onError={() => setPhoto(null)} />
+          ) : (
+            <View style={styles.avatarDefault}>
+              <MaterialCommunityIcons name="account" size={70} color="#fff" />
+            </View>
+          )}
+          {(name || lastName) ? (
+            <Text style={styles.profileName}>{name} {lastName}</Text>
+          ) : null}
+        </View>
+
+        <Text style={styles.sectionLabel}>ACCOUNT SETTING</Text>
+        <SettingsGroup items={accountSettings} navigation={navigation} />
+
+        <Text style={styles.sectionLabel}>MY WALLET</Text>
+        <WalletCard tokens={tokens} navigation={navigation} />
+
+        <Text style={styles.sectionLabel}>LEGAL & SUPPORT</Text>
+        <SettingsGroup items={legalSupport} navigation={navigation} />
+
+        <View style={{ height: 20 }} />
+      </ScrollView>
+
+      <NavBar navigation={navigation} activeTab="More" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#F3F4F6" },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 12 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111" },
+  content: { paddingHorizontal: 16, paddingTop: 10 },
+  avatarContainer: { alignItems: "center", marginBottom: 28 },
+  avatarDefault: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.gray, justifyContent: "center", alignItems: "center", overflow: "hidden" },
+  avatarImage: { width: 100, height: 100, borderRadius: 50 },
+  profileName: { marginTop: 10, fontSize: 16, fontWeight: "600", color: "#111" },
+  sectionLabel: { fontSize: 12, fontWeight: "600", color: "#9CA3AF", letterSpacing: 0.8, marginBottom: 8, marginTop: 4 },
+  group: { backgroundColor: "#fff", borderRadius: 16, paddingHorizontal: 16, marginBottom: 20, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 16 },
+  rowLeft: { flexDirection: "row", alignItems: "center", gap: 14 },
+  rowLabel: { fontSize: 15, fontWeight: "500", color: "#111" },
+  rowDivider: { height: 1, backgroundColor: "#F3F4F6" },
+  walletCard: { backgroundColor: "#fff", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20, flexDirection: "row", alignItems: "center", justifyContent: "space-between", shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
+  walletLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  walletIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#EFF6FF", alignItems: "center", justifyContent: "center" },
+  walletLabel: { fontSize: 12, color: "#9CA3AF", marginBottom: 2 },
+  walletValue: { fontSize: 16, fontWeight: "700", color: "#111" },
+  walletActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  buyBtn: { backgroundColor: "#2563EB", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  upgradeBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#FFFBEB", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#FDE68A" },
+  upgradeBtnText: { fontSize: 12, fontWeight: "700", color: "#D97706" },
+  buyBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+});
